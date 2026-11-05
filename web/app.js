@@ -64,12 +64,13 @@ function bindRuntimeTargets() {
 // 延迟绑定：gameApi 在 bootstrap 创建后才可用
 let runtimeProxies = null;
 function ensureRuntimeProxies() { if (!runtimeProxies) runtimeProxies = bindRuntimeTargets(); return runtimeProxies; }
-let engine = null, storage = null, combat = null, npcDuel = null, diving = null, drops = null, dungeon = null, economy = null, equipment = null, enhance = null, fishing = null, items = null, maritime = null, market = null, pets = null, recovery = null, ships = null, voyage = null, discover = null;
+let engine = null, storage = null, combat = null, npcDuel = null, diving = null, drops = null, dungeon = null, economy = null, equipment = null, enhance = null, fishing = null, items = null, maritime = null, market = null, pets = null, recovery = null, ships = null, voyage = null, discover = null, cook = null;
 function bindGameplayProxies() {
   const p = ensureRuntimeProxies();
   engine = p.engine; combat = p.combat; npcDuel = p.npcDuel; diving = p.diving; dungeon = p.dungeon; economy = p.economy;
   equipment = p.equipment; enhance = p.enhance; fishing = p.fishing; items = p.items; maritime = p.maritime;
   market = p.market; pets = p.pets; recovery = p.recovery; ships = p.ships; voyage = p.voyage; discover = p.discover;
+  cook = p.cook;
   storage = {
     hasPlayer: () => serverView != null,
     corruptRecords: new Map(),
