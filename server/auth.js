@@ -4,8 +4,32 @@
  * 零外部依赖：JWT(HS256) 用 node:crypto 手写，密码哈希用 scrypt。
  */
 const crypto = require('node:crypto');
+const fs = require('node:fs');
+const path = require('node:path');
 
-const JWT_SECRET = process.env.ZHSH_JWT_SECRET || crypto.randomBytes(32).toString('hex');
+// JWT secret 必须跨重启保持稳定，否则每次重启服务器都会把所有人踢下线
+// （客户端还拿着旧 token → 401 → 界面卡在“无法启动”）。
+// 优先用环境变量；否则生成一次并落盘到 server/data/jwt-secret。
+const SECRET_PATH = path.join(__dirname, 'data', 'jwt-secret');
+
+function loadJwtSecret() {
+  const fromEnv = process.env.ZHSH_JWT_SECRET;
+  if (fromEnv) return fromEnv;
+  try {
+    const saved = fs.readFileSync(SECRET_PATH, 'utf8').trim();
+    if (saved.length >= 32) return saved;
+  } catch { /* 首次启动：还没有 secret 文件 */ }
+  const generated = crypto.randomBytes(32).toString('hex');
+  try {
+    fs.mkdirSync(path.dirname(SECRET_PATH), { recursive: true });
+    fs.writeFileSync(SECRET_PATH, generated + '\n', { encoding: 'utf8', mode: 0o600 });
+  } catch (error) {
+    console.warn(`[auth] JWT secret 无法写入 ${SECRET_PATH}，重启后需要重新登录：${error.message}`);
+  }
+  return generated;
+}
+
+const JWT_SECRET = loadJwtSecret();
 const TOKEN_TTL_SECONDS = 7 * 24 * 3600;
 
 function base64url(buf) {

@@ -33,6 +33,21 @@ function purseFromCopper(copper) {
 const { createGameplayState,applyExperienceProgression } = require('./gameplay-state');
 const {abandonTaskItems,assertInventoryRemovalAllowed,consumeTaskItems,defaultPolicy,ensureTaskItemLedger,grantInventoryItem,reconcileTaskItemReservations}=require('./task-item-ledger');
 
+// getPlayerView 会带上全部 651 条任务定义；完整定义（raw/normalized JSON、拆解步骤、
+// 还原审计字段）有 9 MB+，而前端只读下面这些字段。按白名单投影后约 2.9 MB。
+const TASK_VIEW_FIELDS = Object.freeze([
+  'canonical_id', 'source_canonical_id', 'sequence_position', 'display_name', 'task_type', 'description',
+  'level_requirement', 'runtime_capability',
+  'issuer_npc_canonical_id', 'completion_npc_canonical_id',
+  'receive_location_canonical_id', 'submit_location_canonical_id', 'target_location_canonical_id',
+  'targets', 'rewards', 'dialogues', 'prerequisites', 'successors', 'blocking_reasons',
+]);
+function projectTaskForView(task) {
+  const projected = {};
+  for (const key of TASK_VIEW_FIELDS) if (task[key] !== undefined) projected[key] = task[key];
+  return projected;
+}
+
 class TaskRuntimeEngine {
   constructor({ catalog, storage, seriesCanonicalId = 'task.series.01', seriesCanonicalIds = null, clock = () => new Date().toISOString(), faultInjector = null }) {
     this.catalog = assertTaskCatalog(catalog);
@@ -110,9 +125,14 @@ class TaskRuntimeEngine {
   }
 
   listTasks() {
-    const base = this.seriesCanonicalIds.flatMap((seriesId) => this.catalog.listSeriesTasks(seriesId));
-    if (!this.runtimeTasks || this.runtimeTasks.size === 0) return base;
-    return [...base, ...this.runtimeTasks.values()].filter((task) => task && task.canonical_id);
+    // 静态任务表在一次进程生命周期内不变（动态支线另存 runtimeTasks）。
+    // listSeriesTasks 会为每个任务发起多条 SQL，651 个任务约 200 ms；
+    // 缓存后每次渲染不再重复付这笔钱。返回值拷贝一份，避免调用方 sort() 污染缓存。
+    if (!this.staticTaskCache) {
+      this.staticTaskCache = this.seriesCanonicalIds.flatMap((seriesId) => this.catalog.listSeriesTasks(seriesId));
+    }
+    if (!this.runtimeTasks || this.runtimeTasks.size === 0) return this.staticTaskCache.slice();
+    return [...this.staticTaskCache, ...this.runtimeTasks.values()].filter((task) => task && task.canonical_id);
   }
 
   /** 注册一条运行时动态支线（由 AI 生成，符合 getTask 返回形状）。
@@ -251,21 +271,32 @@ class TaskRuntimeEngine {
     const state = this.loadPlayer(playerCanonicalId);
     const node = this.catalog.getMapNode(state.player.current_map_node_canonical_id);
     const activeSeries=seriesCanonicalId ?? state.active_series_canonical_id ?? this.seriesCanonicalId;
+    // 一次遍历拿到全部任务及其运行时态：原先 project 和 task_series 各算一遍运行时态，
+    // 每个 task_series 还会重新跑一遍 listSeriesTasks（每条约 6 条 SQL）。
+    const allTasksRaw = this.listTasks().filter((task)=>!this.isDynamicTask(task.canonical_id));
+    const runtimeByTask = new Map(allTasksRaw.map((task)=>[task.canonical_id,this.getTaskRuntime(state, task.canonical_id)]));
     const project=(task) => ({
-      definition: task,
-      runtime: this.getTaskRuntime(state, task.canonical_id),
+      definition: projectTaskForView(task),
+      runtime: runtimeByTask.get(task.canonical_id),
       progress: task.targets.map((target) => ({
         target_canonical_id: target.canonical_id,
         current_quantity: this.getTaskProgress(state, task.canonical_id, target.canonical_id),
         required_quantity: target.required_quantity,
       })),
     });
-    const allTasks=this.listTasks().filter((task)=>!this.isDynamicTask(task.canonical_id)).map(project);
+    const allTasks=allTasksRaw.map(project);
     const tasks=allTasks.filter((entry)=>seriesOf(entry.definition)===activeSeries);
+    const seriesStats = new Map(this.seriesCanonicalIds.map((id)=>[id,{ total:0,completed:0 }]));
+    for (const task of allTasksRaw) {
+      const stats = seriesStats.get(seriesOf(task));
+      if (!stats) continue;
+      stats.total += 1;
+      if (runtimeByTask.get(task.canonical_id)?.status === 'completed') stats.completed += 1;
+    }
     state.player.purse = purseFromCopper(state.player.money);
     return { ...state,current_location:node,active_series_canonical_id:activeSeries,
-      task_series:this.seriesCanonicalIds.map((id)=>({ canonical_id:id,total:this.catalog.listSeriesTasks(id).length,
-        completed:this.catalog.listSeriesTasks(id).filter((task)=>this.getTaskRuntime(state,task.canonical_id)?.status==='completed').length })),
+      task_series:this.seriesCanonicalIds.map((id)=>({ canonical_id:id,total:seriesStats.get(id).total,
+        completed:seriesStats.get(id).completed })),
       all_task_chain:allTasks,task_chain:tasks };
   }
 

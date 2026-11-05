@@ -205,6 +205,7 @@ function gameplayProjection(state) {
       base_defense:state.player.base_defense,base_agility:state.player.base_agility,morale:state.player.morale,
       defeat_return_map_node_canonical_id:state.player.defeat_return_map_node_canonical_id ?? null,
       reputation:state.player.reputation,title:state.player.title,
+      meal_buff:state.player.meal_buff??null,
       pets:state.player.pets,crew:state.player.crew,skills:state.player.skills,skill_points:state.player.skill_points,
     },
     inventory_capacity:state.inventory_capacity,owned_ships:state.owned_ships,current_ship_canonical_id:state.current_ship_canonical_id,
@@ -216,6 +217,7 @@ function gameplayProjection(state) {
     player_memory:state.player_memory,npc_affinity:state.npc_affinity,
     runtime_tasks:state.runtime_tasks,runtime_progress:state.runtime_progress,
     cargo:state.cargo,cargo_capacity:state.cargo_capacity,
+    cooking:state.cooking??null,
   };
 }
 module.exports = { MIGRATION_PATH,MIGRATION_PATHS,SqliteRuntimeStorage };

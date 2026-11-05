@@ -176,9 +176,18 @@ function exportTask1Content({ databasePath = defaultDatabase,outputPath = defaul
     const monsterPlacements=dedupeByCanonical([...databaseMonsterPlacements,...taskScopedMonsterPlacements]);
 
     const maritimeEntities=resolveMaritimeEntities(db,maritimeCapabilities);
+    // 烹饪配方引用的食材与成品也必须进内容包：否则客户端只拿到 entity.item.xxx 原始 id，
+    // 服务端 CookRuntime 也解析不到成品餐食（getItem 返回 null，烹制直接报错）。
+    const recipeItemIds=(()=>{
+      try {
+        return db.prepare('SELECT cargo_json,result_item_canonical_id FROM recipes').all()
+          .flatMap((row)=>[...Object.keys(JSON.parse(row.cargo_json??'{}')),row.result_item_canonical_id]).filter(Boolean);
+      } catch { return []; }
+    })();
     const requiredContentIds = unique(tasks.flatMap((task) => [...task.targets.map((target) => target.content_entity_canonical_id),
       ...task.rewards.map((reward) => reward.content_entity_canonical_id)].filter(Boolean)).concat(maritimeEntities.map((entry)=>entry.canonical_id))
-      .concat(collectDropTargetContentIds(db)));
+      .concat(collectDropTargetContentIds(db))
+      .concat(recipeItemIds));
     const databaseContentEntities = selectIn(db,`
       SELECT canonical_id,source_canonical_id,entity_category,display_name,normalized_data_json
       FROM content_entities WHERE canonical_id IN (__IN__) ORDER BY canonical_id`,requiredContentIds)
@@ -199,6 +208,14 @@ function exportTask1Content({ databasePath = defaultDatabase,outputPath = defaul
     const contentEntities=dedupeByCanonical([...databaseContentEntities,...runtimeContentEntities]);
     const itemSources = collectItemSources(db,requiredContentIds);
     const gameplay = collectFormalGameplay(db,{ requiredMonsterIds,tasks,selection,cityIds,rewardRules,maritimeCapabilities,maritimeEntities });
+
+    // 烹饪扩展层（data/cooking/cooking-recipes.json）：配方、成品餐食、食谱卷轴。
+    // 走“导出时合并”，不改源库，保证 import 可重复。
+    const cooking = loadCookingContent();
+    if (cooking) {
+      gameplay.recipes = [...(gameplay.recipes ?? []), ...cooking.recipes];
+      contentEntities.push(...cooking.entities);
+    }
 
     // 策划数值修正层（values-patch.json）：只叠加、不改 baseline。对 monsters 与 gameplay 内容对象做字段覆盖。
     let valuesPatch=null;
@@ -415,6 +432,25 @@ function collectFormalGameplay(db,{ requiredMonsterIds,tasks,selection,cityIds,r
     equipment:dedupeByCanonical([...equipment,...maritime.equipment]),drop_relations:dedupeByCanonical([...dropRelations,...maritime.drop_relations]),
     recovery_services:recoveryServices,gameplay_rules:gameplayRules,dungeons:[...baseDungeons,...maritime.dungeons],maritime:maritime.runtime,
     recipes:recipeTrade.recipes,trade_goods:recipeTrade.trade_goods,trade_orders:recipeTrade.trade_orders,convoy_items:recipeTrade.convoy_items };
+}
+
+/**
+ * 烹饪扩展数据（data/cooking/cooking-recipes.json）：
+ * 复用 server/cooking/cooking-content.js 的构建逻辑，避免导出与服务端两份实现漂移。
+ */
+function loadCookingContent() {
+  const built = require('../server/cooking/cooking-content').buildCookingContent();
+  if (!built) return null;
+  return {
+    recipes: built.recipes,
+    entities: built.entities.map((entity) => ({
+      canonical_id: entity.canonical_id,
+      source_canonical_id: entity.canonical_id,
+      entity_category: entity.entity_category,
+      display_name: entity.display_name,
+      normalized_data: entity.normalized_data,
+    })),
+  };
 }
 
 function collectRecipeTrade(db) {

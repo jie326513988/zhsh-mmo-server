@@ -8,7 +8,9 @@ const app = document.querySelector('#app');
 const saveStatus = document.querySelector('#save-status');
 const importInput = document.querySelector('#save-import');
 const debugEnabled = new URLSearchParams(location.search).get('dev') === '1';
-const adminEnabled = new URLSearchParams(location.search).get('admin') !== '0';
+// 超管入口：默认按账号权限（服务端 is_admin）显示；调试时也可用 ?admin=1 强制打开
+const adminOverride = new URLSearchParams(location.search).get('admin') === '1';
+let adminEnabled = adminOverride;
 let content,visuals,gameApi,catalog,gameplayCatalog;
 // 角色指针在服务端同步下由账号 JWT 决定，本地不再维护 active 指针
 let remoteRegistry = { setActive: async () => {}, getActive: async () => null };
@@ -167,10 +169,14 @@ async function bootstrap() {
 
 /** 从服务器拉取最新玩家视图并缓存到 serverView */
 async function ensurePlayerView() {
-  serverView = await gameApi.getState();
-  // 并行拉取当前位置的相邻节点与 NPC（供 renderer 同步读取）
-  try { serverAdjacent = await gameApi.action('list_adjacent'); } catch { serverAdjacent = []; }
-  try { serverNpcs = await gameApi.action('list_current_npcs'); } catch { serverNpcs = []; }
+  // 三个请求互不依赖，并行发出：原先串行时一次渲染要等 3 个往返叠加。
+  const [view] = await Promise.all([
+    gameApi.getState(),
+    gameApi.action('list_adjacent').then((rows) => { serverAdjacent = rows; }, () => { serverAdjacent = []; }),
+    gameApi.action('list_current_npcs').then((rows) => { serverNpcs = rows; }, () => { serverNpcs = []; }),
+  ]);
+  serverView = view;
+  adminEnabled = adminOverride || Boolean(view?.is_admin);
   return serverView;
 }
 
@@ -216,9 +222,11 @@ function renderStart() {
     </div>`}
     ${corrupt ? `<p class="error">存档损坏：${escapeHtml(corrupt)}</p>` : ''}
     ${lastError ? `<p class="error">${escapeHtml(lastError)}</p>` : ''}
-    <p>${hasSave ? '<button class="text-link" data-action="continue-game">继续冒险之旅</button>' : '<button class="text-link" data-action="new-game">启动冒险之旅</button>'}</p>
+    ${gameApi?.getToken()
+      ? `<p>${hasSave ? '<button class="text-link" data-action="continue-game">继续冒险之旅</button>' : '<button class="text-link" data-action="new-game">启动冒险之旅</button>'}</p>
     ${hasSave ? '<p><button class="text-link" data-action="new-game">重新开始</button></p>' : ''}
-    <p><button class="text-link" data-action="import-save">导入存档</button></p>
+    <p><button class="text-link" data-action="import-save">导入存档</button></p>`
+      : '<p>登录或注册后即可开始冒险，进度保存在服务器。</p>'}
   </section>`;
   bindCommonActions();
 }
@@ -570,7 +578,7 @@ function renderTaskListPage() {
     <p><strong>${renderUiIcon('任务日志')}任务</strong></p>
     ${renderFeedback()}
     <p>当前系列：${escapeHtml(activeSeries?.display_name??view.active_series_canonical_id)}</p>
-    <p>${view.task_series.map((series)=>`<button class="text-link" data-series-select="${attr(series.canonical_id)}">${escapeHtml(content.series.find((entry)=>entry.canonical_id===series.canonical_id)?.display_name??series.canonical_id)} ${series.completed}/${series.total}</button>`).join(' · ')}</p>
+    ${adminEnabled ? `<p>${view.task_series.map((series)=>`<button class="text-link" data-series-select="${attr(series.canonical_id)}">${escapeHtml(content.series.find((entry)=>entry.canonical_id===series.canonical_id)?.display_name??series.canonical_id)} ${series.completed}/${series.total}</button>`).join(' · ')}</p>` : ''}
     ${visible.map((entry,index) => `<p class="asset-row">${renderTaskTargetVisual(entry.definition,'item-icon')}${index + 1}. <button class="text-link" data-page="task" data-task-id="${attr(entry.definition.canonical_id)}">${escapeHtml(entry.definition.display_name)}</button>　${statusLabel(entry.runtime.status)}　${renderFastTravel(entry,view)}</p>`).join('') || '<p>当前没有任务。</p>'}
     <p><button class="text-link" data-page="location">返回</button></p>
     ${renderPrimaryNav()}
@@ -635,8 +643,9 @@ function renderItemDetailPage() {
     <p>持有数量：${view.inventory[id]}</p><p>${escapeHtml(data.tip??item.tip??'资料未记录额外说明。')}</p>
     ${gear?`<p>装备等级：${gear.required_level??1}</p><p>${stats.map(([name,value])=>`${name}+${value}`).join('、')||'无附加属性'}</p>
       ${Number(gear.equipment_type)===6?'<p><button class="text-link" data-equip-item="'+attr(id)+'" data-accessory-index="0">装备至饰品槽1</button>　<button class="text-link" data-equip-item="'+attr(id)+'" data-accessory-index="1">槽2</button>　<button class="text-link" data-equip-item="'+attr(id)+'" data-accessory-index="2">槽3</button></p>':`<p><button class="text-link" data-equip-item="${attr(id)}">穿戴</button></p>`}`:''}
+    ${data.catalog==='recipeItems'?`<p>学习后永久解锁这道菜的配方。</p><p><button class="text-link" data-learn-recipe="${attr(id)}">学习食谱</button></p>`:''}
     ${healing>0?`<p>恢复体力：${healing}</p><p><button class="text-link" data-use-item="${attr(id)}">使用</button></p>`:''}
-    ${item.normalized_data?.catalog==='mealItems'||item.buff?`<p>${item.buff?`多场战斗加成：攻击+${Number(item.buff.attack??0)} 防御+${Number(item.buff.defense??0)} 体力+${Number(item.buff.max_health??0)} 敏捷+${Number(item.buff.agility??0)}（${Number(item.buff.battles??3)}场）`:''}</p><p><button class="text-link" data-eat-meal="${attr(id)}">食用</button></p>`:''}
+    ${data.catalog==='mealItems'||data.buff?`<p>${data.buff?`多场战斗加成：攻击+${Number(data.buff.attack??0)} 防御+${Number(data.buff.defense??0)} 体力+${Number(data.buff.max_health??0)} 敏捷+${Number(data.buff.agility??0)}（${Number(data.buff.battles??3)}场）`:''}</p><p><button class="text-link" data-eat-meal="${attr(id)}">食用</button></p>`:''}
     <p><button class="text-link" data-page="backpack">返回背包</button></p>${renderPrimaryNav()}</section>`;
   bindPageActions();bindFormalPageActions();
 }
@@ -668,15 +677,27 @@ function renderFormalEncounterPage() {
 function renderCookPage() {
   document.body.dataset.page='cook';const view=serverView;
   const cityId=view.current_location?.city_canonical_id;
+  const cooking=view.cooking??{level:1,exp:0,next:60,learned:['recipe.73c78efbc714a884','recipe.9974b6f95ab2f5b8']};
+  const learned=new Set(cooking.learned??[]);
+  const itemName=(id)=>(content.content_entities??[]).find((ce)=>ce.canonical_id===id)?.display_name??id;
+  const buffText=(buff)=>buff?[['攻击',buff.attack],['防御',buff.defense],['体力',buff.max_health],['敏捷',buff.agility]].filter(([,v])=>Number(v)).map(([name,v])=>`${name}+${v}`).join(' ')+` · ${Number(buff.battles??3)}场`:'';
   const cityRecipes=(content.recipes??[]).filter((r)=>r.port_city_canonical_id===cityId);
-  const meals=(content.items??[]).filter((item)=>item.normalized_data?.catalog==='mealItems'||(content.content_entities??[]).find((ce)=>ce.canonical_id===item.canonical_id)?.normalized_data?.catalog==='mealItems');
-  app.innerHTML=`<section class="wap-page"><p><strong>${renderUiIcon('烹饪')}烹饪台</strong></p>${renderFeedback()}<p>铜币：${view.player.money}</p>
-    ${cityRecipes.length ? cityRecipes.map((recipe)=>{
-      const cargo=(Object.entries(recipe.cargo??{}).map(([ingredientId,quantity])=>{const ing=(content.content_entities??[]).find((ce)=>ce.canonical_id===ingredientId)??null;const owned=view.inventory[ingredientId]??0;return `${ing?escapeHtml(ing.display_name):ingredientId}(${owned}/${quantity})`;})).join(' + ');
+  const known=cityRecipes.filter((r)=>learned.has(r.canonical_id));
+  const unknown=cityRecipes.filter((r)=>!learned.has(r.canonical_id));
+  app.innerHTML=`<section class="wap-page"><p><strong>${renderUiIcon('烹饪')}烹饪台</strong></p>${renderFeedback()}
+    <p>铜币：${view.player.money}　厨艺：Lv.${Number(cooking.level)||1}（${Number(cooking.exp)||0}/${Number(cooking.next)||60}）　已学 ${learned.size}/${(content.recipes??[]).length} 道</p>
+    ${known.length ? known.map((recipe)=>{
+      const cargo=(Object.entries(recipe.cargo??{}).map(([ingredientId,quantity])=>`${itemName(ingredientId)}(${view.inventory[ingredientId]??0}/${quantity})`)).join(' + ');
       const affordable=Object.entries(recipe.cargo??{}).every(([ingredientId,quantity])=>Number(view.inventory[ingredientId]??0)>=Number(quantity));
+      const required=Number(recipe.required_cooking_level??1)||1;
+      const levelOk=Number(cooking.level)>=required;
       const meal=(content.content_entities??[]).find((ce)=>ce.canonical_id===recipe.result_item_canonical_id);
-      return `<p class="asset-row">${meal?renderCanonicalVisual(meal.canonical_id,'item-icon'):''}<strong>${escapeHtml(recipe.display_name)}</strong>（${cargo}）　<button class="text-link" data-cook="${attr(recipe.canonical_id)}" ${affordable?'':'disabled'}>烹制</button></p>`;
-    }).join('') : '<p>当前城市没有可烹制的配方。</p>'}
+      const buff=buffText(meal?.normalized_data?.buff);
+      return `<section class="asset-row"><p>${meal?renderCanonicalVisual(meal.canonical_id,'item-icon'):''}<strong>${escapeHtml(recipe.display_name)}</strong>${buff?` · ${escapeHtml(buff)}`:''}</p>
+        <p>${cargo}　费用 ${Number(recipe.silver_cost??0)} 铜${levelOk?'':`　<strong class="error">需要厨艺 Lv.${required}</strong>`}</p>
+        <p><button class="text-link" data-cook="${attr(recipe.canonical_id)}" ${(affordable&&levelOk)?'':'disabled'}>烹制</button></p></section>`;
+    }).join('') : '<p>本港还没有学会的配方。去打怪或做任务找找「食谱」吧。</p>'}
+    ${unknown.length?`<details><summary>本港未学会（${unknown.length} 道）</summary>${unknown.map((r)=>`<p>？？？ · 第 ${Number(r.tier??1)} 档${Number(r.required_cooking_level??1)>1?` · 需厨艺 Lv.${Number(r.required_cooking_level)}`:''}</p>`).join('')}</details>`:''}
     <p><button class="text-link" data-page="location">返回</button></p>${renderPrimaryNav()}</section>`;
   bindPageActions();bindFormalPageActions();
 }
@@ -803,11 +824,38 @@ function renderSettingsPage() {
       }).join('')}</ul>` : '<p>还没有角色存档。</p>'}
       <p><input id="new-character-name" type="text" maxlength="20" placeholder="角色名，例如：孙悟空">　<button class="text-link" data-action="new-character">创建新角色</button></p>
     </details>
+    <details open><summary>AI 状态</summary>
+      <div id="ai-status">读取中…</div>
+      <p><button class="text-link" data-action="refresh-ai-status">刷新</button></p>
+      <p>切换「本地 / 联网 / 关闭」：双击根目录 <code>ai-setup.cmd</code>，保存后会自动重启服务器。</p>
+    </details>
     <p><button class="text-link" data-page="location">返回游戏</button></p>
     ${renderPrimaryNav()}
   </section>`;
   bindPageActions();
   bindSettingsActions();
+  void loadAiStatus();
+}
+
+/** 设置页：读取 /api/ai/status，把"现在到底在用哪个模型、健康度如何"显示出来 */
+async function loadAiStatus() {
+  const box = document.querySelector('#ai-status');
+  if (!box) return;
+  box.textContent = '读取中…';
+  try {
+    const s = await gameApi.aiStatus();
+    const mode = !s.enabled ? '已关闭（纯规则保底）' : (s.isCloud ? '联网模型' : '本地 ollama');
+    const health = !s.calls ? '尚未调用'
+      : (s.successRate == null ? '—' : `${s.successRate}% 成功（${s.ok}/${s.calls}）`);
+    box.innerHTML = `<p>模式：<strong>${escapeHtml(mode)}</strong></p>
+      <p>服务：${escapeHtml(String(s.base ?? ''))}</p>
+      <p>主模型：${escapeHtml(String(s.models?.light ?? ''))}　快模型：${escapeHtml(String(s.models?.fast ?? ''))}</p>
+      <p>调用：${escapeHtml(health)}　最近延迟：${s.lastLatencyMs == null ? '—' : `${s.lastLatencyMs} ms`}</p>
+      ${s.lastError ? `<p>最近错误：${escapeHtml(String(s.lastError))}</p>` : ''}
+      ${s.aiPlayers?.length ? `<p>AI 玩家：${escapeHtml(s.aiPlayers.join('、'))}</p>` : ''}`;
+  } catch (error) {
+    box.textContent = `读取失败：${error.message}`;
+  }
 }
 
 function renderCompendiumPage() {
@@ -985,6 +1033,8 @@ function bindFormalPageActions() {
     ()=>cook.cook(PLAYER_ID,button.dataset.cook,eventId('cook')),'已经烹制完成。','cook')));
   document.querySelectorAll('[data-eat-meal]').forEach((button)=>button.addEventListener('click',()=>perform(
     ()=>cook.consumeMeal(PLAYER_ID,button.dataset.eatMeal,eventId('eat-meal')),'已经食用餐食。','backpack')));
+  document.querySelectorAll('[data-learn-recipe]').forEach((button)=>button.addEventListener('click',()=>perform(
+    ()=>cook.learn(PLAYER_ID,button.dataset.learnRecipe,eventId('learn-recipe')),'食谱已学会。','backpack')));
 }
 
 function bindAdminActions() {
@@ -1033,6 +1083,7 @@ function bindAdminActions() {
 }
 
  function bindSettingsActions() {
+   document.querySelector('[data-action="refresh-ai-status"]')?.addEventListener('click',()=>{ void loadAiStatus(); });
    document.querySelectorAll('[data-character-select]').forEach((button) => button.addEventListener('click',async () => {
      const targetId = button.dataset.characterSelect;
      if (targetId === PLAYER_ID) { feedback.succeed('已经是当前角色。'); renderSettingsPage(); return; }
@@ -1118,6 +1169,7 @@ function bindAdminActions() {
      gameEntered=true;feedback.succeed('已继续浏览器存档。');showPage('location');
    });
   document.querySelector('[data-action="new-game"]')?.addEventListener('click',async () => {
+    if (!gameApi?.getToken()) { feedback.fail('请先登录或注册。');renderStart();return; }
     try {
       const existing = serverView != null;
       if (existing && !confirm('开始新游戏将覆盖当前 task1 浏览器存档，是否继续？')) return;
@@ -1398,6 +1450,13 @@ function exposeDebugSurface() {
 }
 
 function showFatal(error) {
+  // 登录态失效不是“无法启动”：清掉旧令牌回到登录页，重新登录即可继续。
+  if (error?.statusCode === 401) {
+    gameEntered = false;
+    feedback.fail('登录已过期，请重新登录。');
+    renderStart();
+    return;
+  }
   browserLog.error('fatal',error.message,{stack:error.stack});
   console.error(error);
   saveStatus.textContent='启动失败';

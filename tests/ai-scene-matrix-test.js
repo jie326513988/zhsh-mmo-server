@@ -11,7 +11,7 @@
 const http = require('node:http');
 const path = require('node:path');
 
-const MODELS = ['qwen3.8-2b-distill:latest', 'qwen3.8-4b-distill:latest'];
+const MODELS = ['qwen3.5:2b', 'qwen3.5:4b'];
 const BASE = { temperature: 0.7, numCtx: 4096 };
 
 function gen(model, prompt, { maxTokens = 120, format = null, system = null, think = false } = {}) {

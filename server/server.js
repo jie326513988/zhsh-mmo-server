@@ -16,10 +16,12 @@ const path = require('node:path');
 const http = require('node:http');
 const fs = require('node:fs');
 const { openAuthority, openAccountStore } = require('./db');
+const { selectCookingDrop } = require('./cooking/cooking-content');
 const { verifyJwt, hashPassword, verifyPassword, issueToken } = require('./auth');
 const { WorldStateRegistry } = require('./state');
 const { attachWebSocket } = require('./ws');
 const { AiPlayerSimulator } = require('./ai/ai-players');
+const { getStats: getAiStats } = require('./ai/ai-decision-service');
 const { WorldEconomy } = require('./eco/world-economy');
 const { decideEvent } = require('./eco/ai-decision');
 const { aiMarketReport } = require('./eco/ai-market-report');
@@ -59,9 +61,9 @@ function authenticate(req) {
   const token = header.startsWith('Bearer ') ? header.slice(7) : header;
   const payload = verifyJwt(token);
   if (!payload || !payload.player) return null;
-  const account = accounts.prepare('SELECT id, username, player_canonical_id FROM accounts WHERE id=?').get(payload.sub);
+  const account = accounts.prepare('SELECT id, username, player_canonical_id, is_admin FROM accounts WHERE id=?').get(payload.sub);
   if (!account) return null;
-  return { accountId: payload.sub, username: account.username, playerCanonicalId: account.player_canonical_id };
+  return { accountId: payload.sub, username: account.username, playerCanonicalId: account.player_canonical_id, isAdmin: Boolean(account.is_admin) };
 }
 
 function sendJson(res, status, body, req = null) {
@@ -91,6 +93,37 @@ function cryptoRandomId() {
   return randomUUID();
 }
 
+// ---- 烹饪：食谱掉落（打怪 / 交任务） ----
+// 只掉落还没学会、且等级档位够得着的配方；具体配方内容在 data/cooking/cooking-recipes.json，
+// 由导出脚本合并进内容包（recipes + 食谱卷轴物品）。
+function cookingDropRecipes() {
+  return (loadContent().recipes ?? []).filter((recipe) => typeof recipe.canonical_id === 'string' && recipe.canonical_id.startsWith('recipe.cook.'));
+}
+function recipeScrollCanonicalId(recipe) {
+  return `entity.item.recipe.cook.${String(recipe.canonical_id).split('.').pop()}`;
+}
+function maybeAwardRecipeScroll(playerId, { level = 1, chance = 0.12, source = 'monster' } = {}) {
+  const recipes = cookingDropRecipes();
+  if (!recipes.length) return null;
+  if (Math.random() >= chance) return null;
+  try {
+    const state = engine.loadPlayer(playerId);
+    const pick = selectCookingDrop(recipes, state.cooking?.learned ?? [], level);
+    if (!pick) return null;
+    const itemCanonicalId = recipeScrollCanonicalId(pick);
+    engine.storage.transact(playerId, (draft) => {
+      draft.inventory[itemCanonicalId] = (draft.inventory[itemCanonicalId] ?? 0) + 1;
+      draft.player.updated_at = new Date().toISOString();
+      return null;
+    });
+    console.log(`[COOK] ${source} 掉落食谱：${pick.display_name}（${pick.canonical_id}）→ ${playerId}`);
+    return { item_canonical_id: itemCanonicalId, recipe_canonical_id: pick.canonical_id, display_name: `食谱：${pick.display_name}`, tier: Number(pick.tier ?? 1) };
+  } catch (error) {
+    console.warn(`[COOK] 食谱掉落失败：${error.message}`);
+    return null;
+  }
+}
+
 // ---- 游戏动作分发器：把客户端动作映射到引擎 runtime ----
 async function performAction(playerId, action, args, evId) {
   const a = args || {};
@@ -101,7 +134,16 @@ async function performAction(playerId, action, args, evId) {
       return engine.processEvent(playerId, { event_id: evId, type: 'talk_to_npc', npc_canonical_id: a.npc_canonical_id, location_canonical_id: a.location_canonical_id });
     }
     case 'defeat_monster': {
-      return engine.processEvent(playerId, { event_id: evId, type: 'defeat_monster', monster_canonical_id: a.monster_canonical_id, location_canonical_id: a.location_canonical_id, quantity: a.quantity ?? 1 });
+      const result = engine.processEvent(playerId, { event_id: evId, type: 'defeat_monster', monster_canonical_id: a.monster_canonical_id, location_canonical_id: a.location_canonical_id, quantity: a.quantity ?? 1 });
+      // 打怪小概率掉「食谱」卷轴：怪物等级决定可掉配方档位
+      if (result?.applied) {
+        const monster = (loadContent().monsters ?? []).find((entry) => entry.canonical_id === a.monster_canonical_id);
+        const level = Number(monster?.level) || 1;
+        const elite = ['elite', 'boss', 'rare'].includes(String(monster?.encounter_type ?? ''));
+        const drop = maybeAwardRecipeScroll(playerId, { level, chance: elite ? 0.25 : 0.12, source: 'monster' });
+        if (drop) result.recipe_scroll = drop;
+      }
+      return result;
     }
     case 'defeat_npc': {
       return engine.processEvent(playerId, { event_id: evId, type: 'defeat_npc', npc_canonical_id: a.npc_canonical_id, location_canonical_id: a.location_canonical_id, quantity: a.quantity ?? 1 });
@@ -113,7 +155,14 @@ async function performAction(playerId, action, args, evId) {
       return engine.processEvent(playerId, { event_id: evId, type: 'consume_item', item_canonical_id: a.item_canonical_id, location_canonical_id: a.location_canonical_id, quantity: a.quantity ?? 1 });
     }
     case 'submit_to_npc': {
-      return engine.processEvent(playerId, { event_id: evId, type: 'submit_to_npc', npc_canonical_id: a.npc_canonical_id, location_canonical_id: a.location_canonical_id });
+      const result = engine.processEvent(playerId, { event_id: evId, type: 'submit_to_npc', npc_canonical_id: a.npc_canonical_id, location_canonical_id: a.location_canonical_id });
+      // 交任务有较高概率掉「食谱」卷轴：任务等级决定可掉配方档位
+      if (result?.action === 'completed') {
+        const task = (loadContent().tasks ?? []).find((entry) => entry.canonical_id === result.task_canonical_id);
+        const drop = maybeAwardRecipeScroll(playerId, { level: Number(task?.level_requirement) || 1, chance: 0.3, source: 'task' });
+        if (drop) result.recipe_scroll = drop;
+      }
+      return result;
     }
     case 'arrive_at_location': {
       // a.location_canonical_id（移动）
@@ -251,9 +300,9 @@ function getEconomy() {
       content: loadContent(),
       statePath: path.join(__dirname, 'data', 'economy.json'),
       tickMs: Number(process.env.ZHSH_ECO_TICK_MS || 60000),
-      aiEnabled: process.env.ZHSH_ECO_AI !== '0',
+      aiEnabled: process.env.ZHSH_ECO_AI !== '0' && process.env.ZHSH_AI_DISABLED !== '1',
       aiDecide: decideEvent,
-      aiReport: aiMarketReport,
+      aiReport: process.env.ZHSH_AI_DISABLED === '1' ? null : aiMarketReport,
       aiChain: decideChainEvent,
       onEvent: (event) => {
         // 先广播事件本体，再异步生成 AI 叙述播报补充（不阻塞事件触发）
@@ -378,7 +427,7 @@ const server = http.createServer(async (req, res) => {
       const info = accounts.prepare('INSERT INTO accounts (username,password_hash,salt,player_canonical_id,created_at) VALUES (?,?,?,?,?)')
         .run(username, hash, salt, playerId, Date.now());
       const token = issueToken({ id: Number(info.lastInsertRowid), username, player_canonical_id: playerId });
-      return sendJson(res, 200, { token, player: { id: Number(info.lastInsertRowid), username, player_canonical_id: playerId } });
+      return sendJson(res, 200, { token, player: { id: Number(info.lastInsertRowid), username, player_canonical_id: playerId, is_admin: 0 } });
     }
 
     // 登录
@@ -387,11 +436,21 @@ const server = http.createServer(async (req, res) => {
       const account = accounts.prepare('SELECT * FROM accounts WHERE username=?').get(username);
       if (!account || !verifyPassword(password, account.salt, account.password_hash)) return sendJson(res, 401, { error: '角色名或密码错误' });
       const token = issueToken({ id: account.id, username: account.username, player_canonical_id: account.player_canonical_id });
-      return sendJson(res, 200, { token, player: { id: account.id, username: account.username, player_canonical_id: account.player_canonical_id } });
+      return sendJson(res, 200, { token, player: { id: account.id, username: account.username, player_canonical_id: account.player_canonical_id, is_admin: Number(account.is_admin) || 0 } });
     }
 
     // 鉴权后
     const auth = authenticate(req);
+
+    // ---- AI 状态（设置页可视化：当前后端 / 模型 / 健康度；永不返回密钥）----
+    if (pathname === '/api/ai/status' && req.method === 'GET') {
+      return sendJson(res, 200, {
+        ...getAiStats(),
+        aiTickMs: Number(process.env.ZHSH_AI_TICK_MS || 45000),
+        ecoAi: process.env.ZHSH_ECO_AI !== '0',
+        aiPlayers: aiSimulator ? [...aiSimulator.players.keys()] : [],
+      });
+    }
     // ---- 超管测试控制台（本地开发/测试：改玩家 state + 手工触发世界动态） ----
     if (pathname.startsWith('/api/admin')) {
       if (!auth) return sendJson(res, 401, { error: '未登录或登录已过期' });
@@ -470,6 +529,8 @@ const server = http.createServer(async (req, res) => {
       if (!auth) return sendJson(res, 401, { error: '未登录或登录已过期' });
       if (pathname === '/api/game/state' && req.method === 'GET') {
         const view = engine.getPlayerView(auth.playerCanonicalId);
+        // 超管入口按账号显示：客户端据此决定是否渲染「超管」页与任务系列切换
+        view.is_admin = Boolean(auth.isAdmin);
         return sendJson(res, 200, view, req);
       }
       if (pathname === '/api/game/import' && req.method === 'POST') {
@@ -770,6 +831,10 @@ const registry = new WorldStateRegistry({ engine, storage });
 let aiSimulator = null;
 function startAiSimulator() {
   if (aiSimulator) return aiSimulator;
+  if (process.env.ZHSH_AI_DISABLED === '1') {
+    console.log('[ZHSH] AI 已关闭（ZHSH_AI_DISABLED=1），不启动 AI 玩家');
+    return null;
+  }
   const gameplay = getRuntime();
   aiSimulator = new AiPlayerSimulator({
     engine, storage,

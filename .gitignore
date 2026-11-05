@@ -20,7 +20,8 @@ artifacts/
 .svelte-kit/
 .turbo/
 *.tmp
-
+# 临时实验目录（如下划线开头的 _tmp_xxx：截图/脚本/外部仓库，不入库）
+_tmp_*/
 # 日志与运行时临时文件
 logs/
 *.log
@@ -40,6 +41,8 @@ server/data/
 .env.*
 !.env.example
 *.local
+# AI 设置窗口写入的配置（含联网模型的 API Key，切勿提交）
+ai-config.json
 
 # 服务器端玩家存档（运行时数据）
 web/*.sqlite

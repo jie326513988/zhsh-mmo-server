@@ -35,6 +35,13 @@ function openAuthority() {
   try {
     rt.catalog.content = { gameplay_rules: JSON.parse(fs.readFileSync(path.join(path.dirname(CONTENT_DB), '..', 'web', 'generated', 'task1-content.json'), 'utf8')).gameplay_rules };
   } catch { /* 规则缺失时维持 firstNode 兜底 */ }
+  // 烹饪扩展实体入库（幂等）：player_inventory 对 content_entities 有外键，
+  // 新增的食谱/餐食只存在于内容 JSON 时无法进背包，这里补进运行时库。
+  try {
+    const { syncCookingContent } = require('./cooking/cooking-content');
+    const added = syncCookingContent(rt.storage.db);
+    if (added) console.log(`[COOK] 已补入 ${added} 条烹饪内容实体`);
+  } catch (error) { console.warn('[COOK] 烹饪内容同步失败：', error.message); }
   // 方案A：WAL 模式避免读写锁冲突（建库后开启）
   try { rt.storage.db.exec('PRAGMA journal_mode=WAL;'); } catch {}
   // 若为全新副本，任务运行时迁移已在 openSqliteRuntime 内 applyMigration 完成
@@ -78,6 +85,9 @@ function openAccountStore() {
       created_at INTEGER NOT NULL
     );
   `);
+  // 超管账号标记：只有 is_admin=1 的账号在客户端显示「超管」入口（老库自动补列）
+  const columns = db.prepare('PRAGMA table_info(accounts)').all().map((column) => column.name);
+  if (!columns.includes('is_admin')) db.exec('ALTER TABLE accounts ADD COLUMN is_admin INTEGER NOT NULL DEFAULT 0');
   return db;
 }
 

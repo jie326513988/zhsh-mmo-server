@@ -229,14 +229,46 @@ class MaritimeRuntime {
   }
 }
 
+// ---- 烹饪：熟练度曲线与食谱学习 ----
+// 参考 WoW/FFXIV 的「配方分级 + 熟练度解锁」与星露谷的「未学会配方显示 ???」：
+// 配方有厨艺等级要求，做菜涨熟练度；配方本身以「食谱」物品形式由怪物/任务掉落。
+const COOKING_STARTER_RECIPES = Object.freeze(['recipe.73c78efbc714a884','recipe.9974b6f95ab2f5b8']);
+const COOKING_LEVEL_CAP = 20;
+function cookingNext(level) { return Math.max(20, Math.round(60 * Math.pow(1.25, Math.max(0, Number(level) - 1)))); }
+function ensureCookingState(state) {
+  if (!state.cooking || typeof state.cooking !== 'object') state.cooking = {};
+  const cooking = state.cooking;
+  cooking.level = Math.min(COOKING_LEVEL_CAP, Math.max(1, Number(cooking.level) || 1));
+  cooking.exp = Math.max(0, Number(cooking.exp) || 0);
+  cooking.learned = Array.isArray(cooking.learned) ? cooking.learned.filter(Boolean) : [];
+  for (const id of COOKING_STARTER_RECIPES) if (!cooking.learned.includes(id)) cooking.learned.push(id);
+  cooking.next = cookingNext(cooking.level);
+  return cooking;
+}
+function grantCookingExp(cooking, amount) {
+  cooking.exp = (Number(cooking.exp) || 0) + Math.max(0, Number(amount) || 0);
+  let leveled = false;
+  while (cooking.level < COOKING_LEVEL_CAP && cooking.exp >= cookingNext(cooking.level)) {
+    cooking.exp -= cookingNext(cooking.level);
+    cooking.level += 1;
+    leveled = true;
+  }
+  cooking.next = cookingNext(cooking.level);
+  return leveled;
+}
+
 class CookRuntime {
   constructor({ storage,catalog,taskEngine=null,clock=isoNow }) {
     this.storage=storage;this.catalog=catalog;this.taskEngine=taskEngine;this.clock=clock;
   }
-  // 在当前城市港口按配方烹制餐食：扣素材 + 计费 + 产出餐食物品
+  // 在当前城市港口按配方烹制餐食：扣素材 + 计费 + 产出餐食物品，并累积厨艺熟练度
   cook(playerId,recipeId,eventId) {
     return transactEvent(this.storage,playerId,eventId,'recipe_cook',{ recipe_canonical_id:recipeId },this.clock,(state) => {
       const recipe=this.catalog.getRecipe(recipeId);
+      const cooking=ensureCookingState(state);
+      if(!cooking.learned.includes(recipeId))throw new Error('还没学会这道菜，先找到它的食谱。');
+      const required=Number(recipe.required_cooking_level??1)||1;
+      if(Number(cooking.level)<required)throw new Error(`厨艺等级不足：「${recipe.display_name}」需要 Lv.${required}，当前 Lv.${cooking.level}。`);
       const city=this.currentCityId(state);
       if(recipe.port_city_canonical_id!==city)throw new Error(`该配方须在对应港口烹制（${recipe.port_city_canonical_id}）。`);
       if(Number(state.player.money)<Number(recipe.silver_cost??0))throw new Error('铜贝不足，无法支付烹制费用。');
@@ -249,8 +281,30 @@ class CookRuntime {
       const mealId=meal.canonical_id;
       state.inventory[mealId]=(state.inventory[mealId]??0)+1;
       const buff=meal.normalized_data?.buff??meal.buff??null;
+      const gained=12+(Number(recipe.tier??1)*8);
+      const leveled=grantCookingExp(cooking,gained);
       return {applied:true,action:'meal_cooked',recipe_canonical_id:recipeId,result_item_canonical_id:mealId,
-        display_name:meal.display_name??mealId,buff,remaining_money:Number(state.player.money)};
+        display_name:meal.display_name??mealId,buff,remaining_money:Number(state.player.money),
+        cooking:{level:cooking.level,exp:cooking.exp,next:cooking.next},cooking_exp_gained:gained,leveled_up:leveled};
+    });
+  }
+  // 学习「食谱」物品：消耗一本食谱，永久解锁对应配方
+  learn(playerId,itemId,eventId) {
+    return transactEvent(this.storage,playerId,eventId,'recipe_learn',{ item_canonical_id:itemId },this.clock,(state) => {
+      const item=this.catalog.getItem(itemId);
+      const data=item?.normalized_data??{};
+      if(data.catalog!=='recipeItems'||!data.recipe_canonical_id)throw new Error('这不是可学习的食谱。');
+      if(Number(state.inventory[itemId]??0)<1)throw new Error('背包里没有这本食谱。');
+      const recipeId=data.recipe_canonical_id;
+      const cooking=ensureCookingState(state);
+      if(cooking.learned.includes(recipeId))throw new Error('这道菜已经学会了。');
+      const recipe=this.catalog.getRecipe(recipeId);
+      setInventory(state,itemId,Number(state.inventory[itemId])-1);
+      cooking.learned.push(recipeId);
+      return {applied:true,action:'recipe_learned',item_canonical_id:itemId,recipe_canonical_id:recipeId,
+        display_name:recipe?.display_name??recipeId,tier:Number(recipe?.tier??data.tier??1),
+        required_level:Number(recipe?.required_cooking_level??1),
+        cooking:{level:cooking.level,exp:cooking.exp,next:cooking.next}};
     });
   }
   // 食用餐食：设置多场战斗 buff

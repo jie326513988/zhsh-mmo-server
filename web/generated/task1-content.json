@@ -250456,6 +250456,17 @@
       }
     },
     {
+      "canonical_id": "entity.item.3078715788fffba1",
+      "source_canonical_id": "entity.item.3078715788fffba1",
+      "entity_category": "item",
+      "display_name": "牛肉馅饼",
+      "normalized_data": {
+        "catalog": "allItems",
+        "name": "牛肉馅饼",
+        "price": 300
+      }
+    },
+    {
       "canonical_id": "entity.item.333062ba96a8dfe3",
       "source_canonical_id": "entity.item.333062ba96a8dfe3",
       "entity_category": "item",
@@ -250612,6 +250623,17 @@
         "catalog": "taskItems",
         "name": "完好的酿酒秘方",
         "value": 2
+      }
+    },
+    {
+      "canonical_id": "entity.item.567cdb95bfd3aff8",
+      "source_canonical_id": "entity.item.567cdb95bfd3aff8",
+      "entity_category": "item",
+      "display_name": "曲奇饼",
+      "normalized_data": {
+        "catalog": "allItems",
+        "name": "曲奇饼",
+        "price": 3000
       }
     },
     {
@@ -251045,6 +251067,17 @@
         "catalog": "taskItems",
         "name": "毛笔",
         "value": 1
+      }
+    },
+    {
+      "canonical_id": "entity.item.b47d2dd709e68b18",
+      "source_canonical_id": "entity.item.b47d2dd709e68b18",
+      "entity_category": "item",
+      "display_name": "泉水",
+      "normalized_data": {
+        "catalog": "allItems",
+        "name": "泉水",
+        "price": 500
       }
     },
     {
@@ -252544,6 +252577,43 @@
       "evidence_locator": "zhsh/config/marketItems.json"
     },
     {
+      "canonical_id": "runtime.meal.73c78efbc714a884",
+      "source_canonical_id": "runtime.meal.73c78efbc714a884",
+      "entity_category": "item",
+      "display_name": "海风炖汤",
+      "normalized_data": {
+        "buff": {
+          "attack": 6,
+          "battles": 3,
+          "defense": 4,
+          "max_health": 40
+        },
+        "catalog": "mealItems",
+        "name": "海风炖汤",
+        "price": 800,
+        "tip": null
+      }
+    },
+    {
+      "canonical_id": "runtime.meal.9974b6f95ab2f5b8",
+      "source_canonical_id": "runtime.meal.9974b6f95ab2f5b8",
+      "entity_category": "item",
+      "display_name": "远洋餐食",
+      "normalized_data": {
+        "buff": {
+          "agility": 4,
+          "attack": 12,
+          "battles": 4,
+          "defense": 8,
+          "max_health": 80
+        },
+        "catalog": "mealItems",
+        "name": "远洋餐食",
+        "price": 1400,
+        "tip": null
+      }
+    },
+    {
       "canonical_id": "runtime.task_acceptance.item.b3f305a6689e2e25",
       "source_canonical_id": "task.series.15.463",
       "entity_category": "item",
@@ -252645,6 +252715,954 @@
         "source_task_canonical_id": "task.series.15.470",
         "task_item": true,
         "type": 11
+      }
+    },
+    {
+      "canonical_id": "runtime.meal.cook.01",
+      "source_canonical_id": "runtime.meal.cook.01",
+      "entity_category": "item",
+      "display_name": "渔夫浓汤",
+      "normalized_data": {
+        "catalog": "mealItems",
+        "name": "渔夫浓汤",
+        "price": 500,
+        "buff": {
+          "attack": 3,
+          "max_health": 15,
+          "battles": 2
+        },
+        "tip": "威尼斯渔夫的家常汤，暖胃又提神。",
+        "cooking_tier": 1
+      }
+    },
+    {
+      "canonical_id": "entity.item.recipe.cook.01",
+      "source_canonical_id": "entity.item.recipe.cook.01",
+      "entity_category": "item",
+      "display_name": "食谱：渔夫浓汤",
+      "normalized_data": {
+        "catalog": "recipeItems",
+        "name": "食谱：渔夫浓汤",
+        "price": 200,
+        "recipe_canonical_id": "recipe.cook.01",
+        "tier": 1,
+        "tip": "威尼斯周边怪物掉落"
+      }
+    },
+    {
+      "canonical_id": "runtime.meal.cook.02",
+      "source_canonical_id": "runtime.meal.cook.02",
+      "entity_category": "item",
+      "display_name": "炭烤小黄鱼",
+      "normalized_data": {
+        "catalog": "mealItems",
+        "name": "炭烤小黄鱼",
+        "price": 700,
+        "buff": {
+          "attack": 4,
+          "battles": 2
+        },
+        "tip": "雅典海港的炭火香气，外焦里嫩。",
+        "cooking_tier": 1
+      }
+    },
+    {
+      "canonical_id": "entity.item.recipe.cook.02",
+      "source_canonical_id": "entity.item.recipe.cook.02",
+      "entity_category": "item",
+      "display_name": "食谱：炭烤小黄鱼",
+      "normalized_data": {
+        "catalog": "recipeItems",
+        "name": "食谱：炭烤小黄鱼",
+        "price": 240,
+        "recipe_canonical_id": "recipe.cook.02",
+        "tier": 1,
+        "tip": "雅典周边怪物掉落"
+      }
+    },
+    {
+      "canonical_id": "runtime.meal.cook.03",
+      "source_canonical_id": "runtime.meal.cook.03",
+      "entity_category": "item",
+      "display_name": "海盐烤鲷鱼",
+      "normalized_data": {
+        "catalog": "mealItems",
+        "name": "海盐烤鲷鱼",
+        "price": 900,
+        "buff": {
+          "defense": 3,
+          "max_health": 10,
+          "battles": 2
+        },
+        "tip": "只用海盐提味，考验火候的马赛做法。",
+        "cooking_tier": 1
+      }
+    },
+    {
+      "canonical_id": "entity.item.recipe.cook.03",
+      "source_canonical_id": "entity.item.recipe.cook.03",
+      "entity_category": "item",
+      "display_name": "食谱：海盐烤鲷鱼",
+      "normalized_data": {
+        "catalog": "recipeItems",
+        "name": "食谱：海盐烤鲷鱼",
+        "price": 260,
+        "recipe_canonical_id": "recipe.cook.03",
+        "tier": 1,
+        "tip": "马赛周边怪物掉落"
+      }
+    },
+    {
+      "canonical_id": "runtime.meal.cook.04",
+      "source_canonical_id": "runtime.meal.cook.04",
+      "entity_category": "item",
+      "display_name": "突尼斯辣鱼汤",
+      "normalized_data": {
+        "catalog": "mealItems",
+        "name": "突尼斯辣鱼汤",
+        "price": 850,
+        "buff": {
+          "attack": 5,
+          "battles": 2
+        },
+        "tip": "香料铺子里熬出的北非风味，喝一口浑身发热。",
+        "cooking_tier": 1
+      }
+    },
+    {
+      "canonical_id": "entity.item.recipe.cook.04",
+      "source_canonical_id": "entity.item.recipe.cook.04",
+      "entity_category": "item",
+      "display_name": "食谱：突尼斯辣鱼汤",
+      "normalized_data": {
+        "catalog": "recipeItems",
+        "name": "食谱：突尼斯辣鱼汤",
+        "price": 260,
+        "recipe_canonical_id": "recipe.cook.04",
+        "tier": 1,
+        "tip": "突尼斯周边怪物掉落"
+      }
+    },
+    {
+      "canonical_id": "runtime.meal.cook.05",
+      "source_canonical_id": "runtime.meal.cook.05",
+      "entity_category": "item",
+      "display_name": "水手肉饼汤",
+      "normalized_data": {
+        "catalog": "mealItems",
+        "name": "水手肉饼汤",
+        "price": 600,
+        "buff": {
+          "max_health": 25,
+          "battles": 2
+        },
+        "tip": "里斯本码头水手的快手菜，管饱。",
+        "cooking_tier": 1
+      }
+    },
+    {
+      "canonical_id": "entity.item.recipe.cook.05",
+      "source_canonical_id": "entity.item.recipe.cook.05",
+      "entity_category": "item",
+      "display_name": "食谱：水手肉饼汤",
+      "normalized_data": {
+        "catalog": "recipeItems",
+        "name": "食谱：水手肉饼汤",
+        "price": 180,
+        "recipe_canonical_id": "recipe.cook.05",
+        "tier": 1,
+        "tip": "里斯本周边怪物掉落"
+      }
+    },
+    {
+      "canonical_id": "runtime.meal.cook.06",
+      "source_canonical_id": "runtime.meal.cook.06",
+      "entity_category": "item",
+      "display_name": "曲奇奶昔",
+      "normalized_data": {
+        "catalog": "mealItems",
+        "name": "曲奇奶昔",
+        "price": 3500,
+        "buff": {
+          "agility": 2,
+          "max_health": 20,
+          "battles": 2
+        },
+        "tip": "阿姆斯特丹的甜点，船长的下午茶。",
+        "cooking_tier": 1
+      }
+    },
+    {
+      "canonical_id": "entity.item.recipe.cook.06",
+      "source_canonical_id": "entity.item.recipe.cook.06",
+      "entity_category": "item",
+      "display_name": "食谱：曲奇奶昔",
+      "normalized_data": {
+        "catalog": "recipeItems",
+        "name": "食谱：曲奇奶昔",
+        "price": 300,
+        "recipe_canonical_id": "recipe.cook.06",
+        "tier": 1,
+        "tip": "阿姆斯特丹周边怪物掉落"
+      }
+    },
+    {
+      "canonical_id": "runtime.meal.cook.07",
+      "source_canonical_id": "runtime.meal.cook.07",
+      "entity_category": "item",
+      "display_name": "北海熏鲱鱼",
+      "normalized_data": {
+        "catalog": "mealItems",
+        "name": "北海熏鲱鱼",
+        "price": 900,
+        "buff": {
+          "attack": 5,
+          "defense": 2,
+          "battles": 3
+        },
+        "tip": "伦敦老酒馆的下酒菜，烟熏味十足。",
+        "cooking_tier": 2
+      }
+    },
+    {
+      "canonical_id": "entity.item.recipe.cook.07",
+      "source_canonical_id": "entity.item.recipe.cook.07",
+      "entity_category": "item",
+      "display_name": "食谱：北海熏鲱鱼",
+      "normalized_data": {
+        "catalog": "recipeItems",
+        "name": "食谱：北海熏鲱鱼",
+        "price": 320,
+        "recipe_canonical_id": "recipe.cook.07",
+        "tier": 2,
+        "tip": "伦敦周边怪物掉落"
+      }
+    },
+    {
+      "canonical_id": "runtime.meal.cook.08",
+      "source_canonical_id": "runtime.meal.cook.08",
+      "entity_category": "item",
+      "display_name": "鳕鱼浓汤",
+      "normalized_data": {
+        "catalog": "mealItems",
+        "name": "鳕鱼浓汤",
+        "price": 2000,
+        "buff": {
+          "max_health": 35,
+          "battles": 3
+        },
+        "tip": "北海渔港的奶白浓汤，冷天里最实在。",
+        "cooking_tier": 2
+      }
+    },
+    {
+      "canonical_id": "entity.item.recipe.cook.08",
+      "source_canonical_id": "entity.item.recipe.cook.08",
+      "entity_category": "item",
+      "display_name": "食谱：鳕鱼浓汤",
+      "normalized_data": {
+        "catalog": "recipeItems",
+        "name": "食谱：鳕鱼浓汤",
+        "price": 360,
+        "recipe_canonical_id": "recipe.cook.08",
+        "tier": 2,
+        "tip": "阿姆斯特丹周边怪物掉落"
+      }
+    },
+    {
+      "canonical_id": "runtime.meal.cook.09",
+      "source_canonical_id": "runtime.meal.cook.09",
+      "entity_category": "item",
+      "display_name": "汉堡鳕鱼排",
+      "normalized_data": {
+        "catalog": "mealItems",
+        "name": "汉堡鳕鱼排",
+        "price": 2200,
+        "buff": {
+          "attack": 7,
+          "battles": 3
+        },
+        "tip": "裹上香料的面衣，炸得金黄酥脆。",
+        "cooking_tier": 2
+      }
+    },
+    {
+      "canonical_id": "entity.item.recipe.cook.09",
+      "source_canonical_id": "entity.item.recipe.cook.09",
+      "entity_category": "item",
+      "display_name": "食谱：汉堡鳕鱼排",
+      "normalized_data": {
+        "catalog": "recipeItems",
+        "name": "食谱：汉堡鳕鱼排",
+        "price": 380,
+        "recipe_canonical_id": "recipe.cook.09",
+        "tier": 2,
+        "tip": "汉堡周边怪物掉落"
+      }
+    },
+    {
+      "canonical_id": "runtime.meal.cook.10",
+      "source_canonical_id": "runtime.meal.cook.10",
+      "entity_category": "item",
+      "display_name": "哥本哈根鲑鱼盘",
+      "normalized_data": {
+        "catalog": "mealItems",
+        "name": "哥本哈根鲑鱼盘",
+        "price": 1500,
+        "buff": {
+          "agility": 4,
+          "max_health": 15,
+          "battles": 3
+        },
+        "tip": "北欧人的轻食拼盘，配一块曲奇刚好。",
+        "cooking_tier": 2
+      }
+    },
+    {
+      "canonical_id": "entity.item.recipe.cook.10",
+      "source_canonical_id": "entity.item.recipe.cook.10",
+      "entity_category": "item",
+      "display_name": "食谱：哥本哈根鲑鱼盘",
+      "normalized_data": {
+        "catalog": "recipeItems",
+        "name": "食谱：哥本哈根鲑鱼盘",
+        "price": 340,
+        "recipe_canonical_id": "recipe.cook.10",
+        "tier": 2,
+        "tip": "哥本哈根周边怪物掉落"
+      }
+    },
+    {
+      "canonical_id": "runtime.meal.cook.11",
+      "source_canonical_id": "runtime.meal.cook.11",
+      "entity_category": "item",
+      "display_name": "水手炖肉",
+      "normalized_data": {
+        "catalog": "mealItems",
+        "name": "水手炖肉",
+        "price": 1200,
+        "buff": {
+          "attack": 6,
+          "max_health": 20,
+          "battles": 3
+        },
+        "tip": "山猪肉炖到软烂，是远航前的底气。",
+        "cooking_tier": 2
+      }
+    },
+    {
+      "canonical_id": "entity.item.recipe.cook.11",
+      "source_canonical_id": "entity.item.recipe.cook.11",
+      "entity_category": "item",
+      "display_name": "食谱：水手炖肉",
+      "normalized_data": {
+        "catalog": "recipeItems",
+        "name": "食谱：水手炖肉",
+        "price": 320,
+        "recipe_canonical_id": "recipe.cook.11",
+        "tier": 2,
+        "tip": "里斯本周边怪物掉落"
+      }
+    },
+    {
+      "canonical_id": "runtime.meal.cook.12",
+      "source_canonical_id": "runtime.meal.cook.12",
+      "entity_category": "item",
+      "display_name": "带鱼饭团",
+      "normalized_data": {
+        "catalog": "mealItems",
+        "name": "带鱼饭团",
+        "price": 900,
+        "buff": {
+          "max_health": 30,
+          "battles": 3
+        },
+        "tip": "大阪町人出门带着走的干粮。",
+        "cooking_tier": 2
+      }
+    },
+    {
+      "canonical_id": "entity.item.recipe.cook.12",
+      "source_canonical_id": "entity.item.recipe.cook.12",
+      "entity_category": "item",
+      "display_name": "食谱：带鱼饭团",
+      "normalized_data": {
+        "catalog": "recipeItems",
+        "name": "食谱：带鱼饭团",
+        "price": 300,
+        "recipe_canonical_id": "recipe.cook.12",
+        "tier": 2,
+        "tip": "大阪周边怪物掉落"
+      }
+    },
+    {
+      "canonical_id": "runtime.meal.cook.13",
+      "source_canonical_id": "runtime.meal.cook.13",
+      "entity_category": "item",
+      "display_name": "开普敦剑鱼排",
+      "normalized_data": {
+        "catalog": "mealItems",
+        "name": "开普敦剑鱼排",
+        "price": 3000,
+        "buff": {
+          "attack": 9,
+          "battles": 3
+        },
+        "tip": "好望角的硬菜，剑鱼厚切，火候利落。",
+        "cooking_tier": 3
+      }
+    },
+    {
+      "canonical_id": "entity.item.recipe.cook.13",
+      "source_canonical_id": "entity.item.recipe.cook.13",
+      "entity_category": "item",
+      "display_name": "食谱：开普敦剑鱼排",
+      "normalized_data": {
+        "catalog": "recipeItems",
+        "name": "食谱：开普敦剑鱼排",
+        "price": 520,
+        "recipe_canonical_id": "recipe.cook.13",
+        "tier": 3,
+        "tip": "开普敦周边怪物掉落"
+      }
+    },
+    {
+      "canonical_id": "runtime.meal.cook.14",
+      "source_canonical_id": "runtime.meal.cook.14",
+      "entity_category": "item",
+      "display_name": "亚丁章鱼烧",
+      "normalized_data": {
+        "catalog": "mealItems",
+        "name": "亚丁章鱼烧",
+        "price": 1800,
+        "buff": {
+          "attack": 8,
+          "agility": 3,
+          "battles": 3
+        },
+        "tip": "红海港口的铁板小吃，弹牙鲜香。",
+        "cooking_tier": 3
+      }
+    },
+    {
+      "canonical_id": "entity.item.recipe.cook.14",
+      "source_canonical_id": "entity.item.recipe.cook.14",
+      "entity_category": "item",
+      "display_name": "食谱：亚丁章鱼烧",
+      "normalized_data": {
+        "catalog": "recipeItems",
+        "name": "食谱：亚丁章鱼烧",
+        "price": 480,
+        "recipe_canonical_id": "recipe.cook.14",
+        "tier": 3,
+        "tip": "亚丁周边怪物掉落"
+      }
+    },
+    {
+      "canonical_id": "runtime.meal.cook.15",
+      "source_canonical_id": "runtime.meal.cook.15",
+      "entity_category": "item",
+      "display_name": "孟买咖喱鱼",
+      "normalized_data": {
+        "catalog": "mealItems",
+        "name": "孟买咖喱鱼",
+        "price": 1600,
+        "buff": {
+          "attack": 10,
+          "battles": 3
+        },
+        "tip": "香料与椰浆的浓郁组合，配饭一绝。",
+        "cooking_tier": 3
+      }
+    },
+    {
+      "canonical_id": "entity.item.recipe.cook.15",
+      "source_canonical_id": "entity.item.recipe.cook.15",
+      "entity_category": "item",
+      "display_name": "食谱：孟买咖喱鱼",
+      "normalized_data": {
+        "catalog": "recipeItems",
+        "name": "食谱：孟买咖喱鱼",
+        "price": 500,
+        "recipe_canonical_id": "recipe.cook.15",
+        "tier": 3,
+        "tip": "孟买周边怪物掉落"
+      }
+    },
+    {
+      "canonical_id": "runtime.meal.cook.16",
+      "source_canonical_id": "runtime.meal.cook.16",
+      "entity_category": "item",
+      "display_name": "锡兰红茶鱼汤",
+      "normalized_data": {
+        "catalog": "mealItems",
+        "name": "锡兰红茶鱼汤",
+        "price": 1200,
+        "buff": {
+          "max_health": 40,
+          "battles": 4
+        },
+        "tip": "茶香压住鱼腥，锡兰人的待客汤。",
+        "cooking_tier": 3
+      }
+    },
+    {
+      "canonical_id": "entity.item.recipe.cook.16",
+      "source_canonical_id": "entity.item.recipe.cook.16",
+      "entity_category": "item",
+      "display_name": "食谱：锡兰红茶鱼汤",
+      "normalized_data": {
+        "catalog": "recipeItems",
+        "name": "食谱：锡兰红茶鱼汤",
+        "price": 460,
+        "recipe_canonical_id": "recipe.cook.16",
+        "tier": 3,
+        "tip": "锡兰周边怪物掉落"
+      }
+    },
+    {
+      "canonical_id": "runtime.meal.cook.17",
+      "source_canonical_id": "runtime.meal.cook.17",
+      "entity_category": "item",
+      "display_name": "马六甲鲈鱼饭",
+      "normalized_data": {
+        "catalog": "mealItems",
+        "name": "马六甲鲈鱼饭",
+        "price": 1800,
+        "buff": {
+          "attack": 8,
+          "max_health": 20,
+          "battles": 4
+        },
+        "tip": "海峡商路带来的混搭风味。",
+        "cooking_tier": 3
+      }
+    },
+    {
+      "canonical_id": "entity.item.recipe.cook.17",
+      "source_canonical_id": "entity.item.recipe.cook.17",
+      "entity_category": "item",
+      "display_name": "食谱：马六甲鲈鱼饭",
+      "normalized_data": {
+        "catalog": "recipeItems",
+        "name": "食谱：马六甲鲈鱼饭",
+        "price": 480,
+        "recipe_canonical_id": "recipe.cook.17",
+        "tier": 3,
+        "tip": "马六甲周边怪物掉落"
+      }
+    },
+    {
+      "canonical_id": "runtime.meal.cook.18",
+      "source_canonical_id": "runtime.meal.cook.18",
+      "entity_category": "item",
+      "display_name": "莫桑比克烤鳗",
+      "normalized_data": {
+        "catalog": "mealItems",
+        "name": "莫桑比克烤鳗",
+        "price": 2200,
+        "buff": {
+          "agility": 5,
+          "battles": 4
+        },
+        "tip": "非洲东岸的炭烤鳗鱼，油脂滴在火上滋滋响。",
+        "cooking_tier": 3
+      }
+    },
+    {
+      "canonical_id": "entity.item.recipe.cook.18",
+      "source_canonical_id": "entity.item.recipe.cook.18",
+      "entity_category": "item",
+      "display_name": "食谱：莫桑比克烤鳗",
+      "normalized_data": {
+        "catalog": "recipeItems",
+        "name": "食谱：莫桑比克烤鳗",
+        "price": 520,
+        "recipe_canonical_id": "recipe.cook.18",
+        "tier": 3,
+        "tip": "莫桑比克周边怪物掉落"
+      }
+    },
+    {
+      "canonical_id": "runtime.meal.cook.19",
+      "source_canonical_id": "runtime.meal.cook.19",
+      "entity_category": "item",
+      "display_name": "泉州剑鱼刺身",
+      "normalized_data": {
+        "catalog": "mealItems",
+        "name": "泉州剑鱼刺身",
+        "price": 3200,
+        "buff": {
+          "agility": 7,
+          "attack": 5,
+          "battles": 4
+        },
+        "tip": "刀工与新鲜度缺一不可。",
+        "cooking_tier": 4
+      }
+    },
+    {
+      "canonical_id": "entity.item.recipe.cook.19",
+      "source_canonical_id": "entity.item.recipe.cook.19",
+      "entity_category": "item",
+      "display_name": "食谱：泉州剑鱼刺身",
+      "normalized_data": {
+        "catalog": "recipeItems",
+        "name": "食谱：泉州剑鱼刺身",
+        "price": 700,
+        "recipe_canonical_id": "recipe.cook.19",
+        "tier": 4,
+        "tip": "泉州周边精英怪物掉落"
+      }
+    },
+    {
+      "canonical_id": "runtime.meal.cook.20",
+      "source_canonical_id": "runtime.meal.cook.20",
+      "entity_category": "item",
+      "display_name": "大阪章鱼烧",
+      "normalized_data": {
+        "catalog": "mealItems",
+        "name": "大阪章鱼烧",
+        "price": 2500,
+        "buff": {
+          "attack": 10,
+          "max_health": 30,
+          "battles": 4
+        },
+        "tip": "街头铁板上的圆丸子，趁热吃。",
+        "cooking_tier": 4
+      }
+    },
+    {
+      "canonical_id": "entity.item.recipe.cook.20",
+      "source_canonical_id": "entity.item.recipe.cook.20",
+      "entity_category": "item",
+      "display_name": "食谱：大阪章鱼烧",
+      "normalized_data": {
+        "catalog": "recipeItems",
+        "name": "食谱：大阪章鱼烧",
+        "price": 680,
+        "recipe_canonical_id": "recipe.cook.20",
+        "tier": 4,
+        "tip": "大阪周边精英怪物掉落"
+      }
+    },
+    {
+      "canonical_id": "runtime.meal.cook.21",
+      "source_canonical_id": "runtime.meal.cook.21",
+      "entity_category": "item",
+      "display_name": "京都鳗鱼饭",
+      "normalized_data": {
+        "catalog": "mealItems",
+        "name": "京都鳗鱼饭",
+        "price": 2800,
+        "buff": {
+          "attack": 12,
+          "battles": 4
+        },
+        "tip": "酱汁反复刷烤，米饭吸饱香气。",
+        "cooking_tier": 4
+      }
+    },
+    {
+      "canonical_id": "entity.item.recipe.cook.21",
+      "source_canonical_id": "entity.item.recipe.cook.21",
+      "entity_category": "item",
+      "display_name": "食谱：京都鳗鱼饭",
+      "normalized_data": {
+        "catalog": "recipeItems",
+        "name": "食谱：京都鳗鱼饭",
+        "price": 720,
+        "recipe_canonical_id": "recipe.cook.21",
+        "tier": 4,
+        "tip": "京都周边精英怪物掉落"
+      }
+    },
+    {
+      "canonical_id": "runtime.meal.cook.22",
+      "source_canonical_id": "runtime.meal.cook.22",
+      "entity_category": "item",
+      "display_name": "长安肉夹馍宴",
+      "normalized_data": {
+        "catalog": "mealItems",
+        "name": "长安肉夹馍宴",
+        "price": 3000,
+        "buff": {
+          "attack": 12,
+          "max_health": 50,
+          "battles": 4
+        },
+        "tip": "长安西市的豪客吃法，肉夹馍配炖肉。",
+        "cooking_tier": 4
+      }
+    },
+    {
+      "canonical_id": "entity.item.recipe.cook.22",
+      "source_canonical_id": "entity.item.recipe.cook.22",
+      "entity_category": "item",
+      "display_name": "食谱：长安肉夹馍宴",
+      "normalized_data": {
+        "catalog": "recipeItems",
+        "name": "食谱：长安肉夹馍宴",
+        "price": 750,
+        "recipe_canonical_id": "recipe.cook.22",
+        "tier": 4,
+        "tip": "长安周边精英怪物掉落"
+      }
+    },
+    {
+      "canonical_id": "runtime.meal.cook.23",
+      "source_canonical_id": "runtime.meal.cook.23",
+      "entity_category": "item",
+      "display_name": "泉州金枪鱼饭",
+      "normalized_data": {
+        "catalog": "mealItems",
+        "name": "泉州金枪鱼饭",
+        "price": 3500,
+        "buff": {
+          "attack": 13,
+          "battles": 5
+        },
+        "tip": "厚切金枪鱼铺满饭面，港口工人的力气来源。",
+        "cooking_tier": 4
+      }
+    },
+    {
+      "canonical_id": "entity.item.recipe.cook.23",
+      "source_canonical_id": "entity.item.recipe.cook.23",
+      "entity_category": "item",
+      "display_name": "食谱：泉州金枪鱼饭",
+      "normalized_data": {
+        "catalog": "recipeItems",
+        "name": "食谱：泉州金枪鱼饭",
+        "price": 800,
+        "recipe_canonical_id": "recipe.cook.23",
+        "tier": 4,
+        "tip": "泉州周边精英怪物掉落"
+      }
+    },
+    {
+      "canonical_id": "runtime.meal.cook.24",
+      "source_canonical_id": "runtime.meal.cook.24",
+      "entity_category": "item",
+      "display_name": "大阪蓝鳍寿司",
+      "normalized_data": {
+        "catalog": "mealItems",
+        "name": "大阪蓝鳍寿司",
+        "price": 6000,
+        "buff": {
+          "attack": 15,
+          "agility": 5,
+          "battles": 4
+        },
+        "tip": "顶级蓝鳍，入口即化。",
+        "cooking_tier": 4
+      }
+    },
+    {
+      "canonical_id": "entity.item.recipe.cook.24",
+      "source_canonical_id": "entity.item.recipe.cook.24",
+      "entity_category": "item",
+      "display_name": "食谱：大阪蓝鳍寿司",
+      "normalized_data": {
+        "catalog": "recipeItems",
+        "name": "食谱：大阪蓝鳍寿司",
+        "price": 1200,
+        "recipe_canonical_id": "recipe.cook.24",
+        "tier": 4,
+        "tip": "大阪周边稀有怪物掉落"
+      }
+    },
+    {
+      "canonical_id": "runtime.meal.cook.25",
+      "source_canonical_id": "runtime.meal.cook.25",
+      "entity_category": "item",
+      "display_name": "科潘鲯鳅盛宴",
+      "normalized_data": {
+        "catalog": "mealItems",
+        "name": "科潘鲯鳅盛宴",
+        "price": 4500,
+        "buff": {
+          "attack": 14,
+          "max_health": 60,
+          "battles": 5
+        },
+        "tip": "雨林边缘的丰盛大餐，香料铺满整条鱼。",
+        "cooking_tier": 5
+      }
+    },
+    {
+      "canonical_id": "entity.item.recipe.cook.25",
+      "source_canonical_id": "entity.item.recipe.cook.25",
+      "entity_category": "item",
+      "display_name": "食谱：科潘鲯鳅盛宴",
+      "normalized_data": {
+        "catalog": "recipeItems",
+        "name": "食谱：科潘鲯鳅盛宴",
+        "price": 1400,
+        "recipe_canonical_id": "recipe.cook.25",
+        "tier": 5,
+        "tip": "科潘周边稀有怪物掉落"
+      }
+    },
+    {
+      "canonical_id": "runtime.meal.cook.26",
+      "source_canonical_id": "runtime.meal.cook.26",
+      "entity_category": "item",
+      "display_name": "玛雅潘烤鲯鲨",
+      "normalized_data": {
+        "catalog": "mealItems",
+        "name": "玛雅潘烤鲯鲨",
+        "price": 5000,
+        "buff": {
+          "attack": 16,
+          "battles": 5
+        },
+        "tip": "加勒比海的猛鱼，烤到外皮焦脆。",
+        "cooking_tier": 5
+      }
+    },
+    {
+      "canonical_id": "entity.item.recipe.cook.26",
+      "source_canonical_id": "entity.item.recipe.cook.26",
+      "entity_category": "item",
+      "display_name": "食谱：玛雅潘烤鲯鲨",
+      "normalized_data": {
+        "catalog": "recipeItems",
+        "name": "食谱：玛雅潘烤鲯鲨",
+        "price": 1500,
+        "recipe_canonical_id": "recipe.cook.26",
+        "tier": 5,
+        "tip": "玛雅潘周边稀有怪物掉落"
+      }
+    },
+    {
+      "canonical_id": "runtime.meal.cook.27",
+      "source_canonical_id": "runtime.meal.cook.27",
+      "entity_category": "item",
+      "display_name": "加勒比海盗炖锅",
+      "normalized_data": {
+        "catalog": "mealItems",
+        "name": "加勒比海盗炖锅",
+        "price": 4000,
+        "buff": {
+          "attack": 15,
+          "defense": 6,
+          "battles": 5
+        },
+        "tip": "海盗船上的大锅菜，朗姆酒直接倒进去。",
+        "cooking_tier": 5
+      }
+    },
+    {
+      "canonical_id": "entity.item.recipe.cook.27",
+      "source_canonical_id": "entity.item.recipe.cook.27",
+      "entity_category": "item",
+      "display_name": "食谱：加勒比海盗炖锅",
+      "normalized_data": {
+        "catalog": "recipeItems",
+        "name": "食谱：加勒比海盗炖锅",
+        "price": 1300,
+        "recipe_canonical_id": "recipe.cook.27",
+        "tier": 5,
+        "tip": "圣乔治周边稀有怪物掉落"
+      }
+    },
+    {
+      "canonical_id": "runtime.meal.cook.28",
+      "source_canonical_id": "runtime.meal.cook.28",
+      "entity_category": "item",
+      "display_name": "伊斯坦堡烤鲈鱼",
+      "normalized_data": {
+        "catalog": "mealItems",
+        "name": "伊斯坦堡烤鲈鱼",
+        "price": 2800,
+        "buff": {
+          "attack": 13,
+          "defense": 5,
+          "battles": 5
+        },
+        "tip": "博斯普鲁斯海峡边的烤鱼，配饭最香。",
+        "cooking_tier": 5
+      }
+    },
+    {
+      "canonical_id": "entity.item.recipe.cook.28",
+      "source_canonical_id": "entity.item.recipe.cook.28",
+      "entity_category": "item",
+      "display_name": "食谱：伊斯坦堡烤鲈鱼",
+      "normalized_data": {
+        "catalog": "recipeItems",
+        "name": "食谱：伊斯坦堡烤鲈鱼",
+        "price": 1100,
+        "recipe_canonical_id": "recipe.cook.28",
+        "tier": 5,
+        "tip": "伊斯坦堡周边稀有怪物掉落"
+      }
+    },
+    {
+      "canonical_id": "runtime.meal.cook.29",
+      "source_canonical_id": "runtime.meal.cook.29",
+      "entity_category": "item",
+      "display_name": "蓬莱仙宴",
+      "normalized_data": {
+        "catalog": "mealItems",
+        "name": "蓬莱仙宴",
+        "price": 5000,
+        "buff": {
+          "max_health": 80,
+          "attack": 10,
+          "battles": 5
+        },
+        "tip": "传说中仙人待客的宴席，汤色如玉。",
+        "cooking_tier": 5
+      }
+    },
+    {
+      "canonical_id": "entity.item.recipe.cook.29",
+      "source_canonical_id": "entity.item.recipe.cook.29",
+      "entity_category": "item",
+      "display_name": "食谱：蓬莱仙宴",
+      "normalized_data": {
+        "catalog": "recipeItems",
+        "name": "食谱：蓬莱仙宴",
+        "price": 1600,
+        "recipe_canonical_id": "recipe.cook.29",
+        "tier": 5,
+        "tip": "蓬莱仙岛周边稀有怪物掉落"
+      }
+    },
+    {
+      "canonical_id": "runtime.meal.cook.30",
+      "source_canonical_id": "runtime.meal.cook.30",
+      "entity_category": "item",
+      "display_name": "远洋船长盛宴",
+      "normalized_data": {
+        "catalog": "mealItems",
+        "name": "远洋船长盛宴",
+        "price": 8000,
+        "buff": {
+          "attack": 18,
+          "defense": 8,
+          "max_health": 60,
+          "battles": 5
+        },
+        "tip": "只有远洋船长才配得上的压轴大菜。",
+        "cooking_tier": 5
+      }
+    },
+    {
+      "canonical_id": "entity.item.recipe.cook.30",
+      "source_canonical_id": "entity.item.recipe.cook.30",
+      "entity_category": "item",
+      "display_name": "食谱：远洋船长盛宴",
+      "normalized_data": {
+        "catalog": "recipeItems",
+        "name": "食谱：远洋船长盛宴",
+        "price": 2000,
+        "recipe_canonical_id": "recipe.cook.30",
+        "tier": 5,
+        "tip": "里斯本周边首领级怪物掉落"
       }
     }
   ],
@@ -287263,6 +288281,467 @@
         "entity.item.567cdb95bfd3aff8": 1,
         "entity.item.b47d2dd709e68b18": 1
       }
+    },
+    {
+      "canonical_id": "recipe.cook.01",
+      "source_canonical_id": "recipe.cook.01",
+      "display_name": "渔夫浓汤",
+      "port_city_canonical_id": "entity.city.7ff6ada0319bc625",
+      "cargo": {
+        "entity.item.ea2bd40c4d621957": 2,
+        "entity.item.b47d2dd709e68b18": 1
+      },
+      "silver_cost": 6,
+      "result_item_canonical_id": "runtime.meal.cook.01",
+      "description": "威尼斯渔夫的家常汤，暖胃又提神。",
+      "tier": 1,
+      "required_cooking_level": 1
+    },
+    {
+      "canonical_id": "recipe.cook.02",
+      "source_canonical_id": "recipe.cook.02",
+      "display_name": "炭烤小黄鱼",
+      "port_city_canonical_id": "entity.city.87a20d666b80e436",
+      "cargo": {
+        "entity.item.2367efd718efc9d1": 2,
+        "entity.item.e35e9fb1217e0f86": 1
+      },
+      "silver_cost": 6,
+      "result_item_canonical_id": "runtime.meal.cook.02",
+      "description": "雅典海港的炭火香气，外焦里嫩。",
+      "tier": 1,
+      "required_cooking_level": 1
+    },
+    {
+      "canonical_id": "recipe.cook.03",
+      "source_canonical_id": "recipe.cook.03",
+      "display_name": "海盐烤鲷鱼",
+      "port_city_canonical_id": "entity.city.43c4eac54a2bc976",
+      "cargo": {
+        "entity.item.bfcaac43046c4e00": 1,
+        "entity.item.b47d2dd709e68b18": 1
+      },
+      "silver_cost": 8,
+      "result_item_canonical_id": "runtime.meal.cook.03",
+      "description": "只用海盐提味，考验火候的马赛做法。",
+      "tier": 1,
+      "required_cooking_level": 1
+    },
+    {
+      "canonical_id": "recipe.cook.04",
+      "source_canonical_id": "recipe.cook.04",
+      "display_name": "突尼斯辣鱼汤",
+      "port_city_canonical_id": "entity.city.74d85182a36af927",
+      "cargo": {
+        "entity.item.36c03c7061d263fc": 1,
+        "entity.item.e35e9fb1217e0f86": 1
+      },
+      "silver_cost": 8,
+      "result_item_canonical_id": "runtime.meal.cook.04",
+      "description": "香料铺子里熬出的北非风味，喝一口浑身发热。",
+      "tier": 1,
+      "required_cooking_level": 1
+    },
+    {
+      "canonical_id": "recipe.cook.05",
+      "source_canonical_id": "recipe.cook.05",
+      "display_name": "水手肉饼汤",
+      "port_city_canonical_id": "entity.city.511c0211c97166d9",
+      "cargo": {
+        "entity.item.3078715788fffba1": 1,
+        "entity.item.b47d2dd709e68b18": 1
+      },
+      "silver_cost": 5,
+      "result_item_canonical_id": "runtime.meal.cook.05",
+      "description": "里斯本码头水手的快手菜，管饱。",
+      "tier": 1,
+      "required_cooking_level": 1
+    },
+    {
+      "canonical_id": "recipe.cook.06",
+      "source_canonical_id": "recipe.cook.06",
+      "display_name": "曲奇奶昔",
+      "port_city_canonical_id": "entity.city.b9142ac1b39e9a0b",
+      "cargo": {
+        "entity.item.567cdb95bfd3aff8": 1,
+        "entity.item.3855a868ca7393f3": 1
+      },
+      "silver_cost": 5,
+      "result_item_canonical_id": "runtime.meal.cook.06",
+      "description": "阿姆斯特丹的甜点，船长的下午茶。",
+      "tier": 1,
+      "required_cooking_level": 1
+    },
+    {
+      "canonical_id": "recipe.cook.07",
+      "source_canonical_id": "recipe.cook.07",
+      "display_name": "北海熏鲱鱼",
+      "port_city_canonical_id": "entity.city.5d8adf9a8553ebca",
+      "cargo": {
+        "entity.item.ac50706c1696095d": 2,
+        "entity.item.86912d08adaae017": 1
+      },
+      "silver_cost": 10,
+      "result_item_canonical_id": "runtime.meal.cook.07",
+      "description": "伦敦老酒馆的下酒菜，烟熏味十足。",
+      "tier": 2,
+      "required_cooking_level": 3
+    },
+    {
+      "canonical_id": "recipe.cook.08",
+      "source_canonical_id": "recipe.cook.08",
+      "display_name": "鳕鱼浓汤",
+      "port_city_canonical_id": "entity.city.b9142ac1b39e9a0b",
+      "cargo": {
+        "entity.item.0f8b49af64bf2861": 1,
+        "entity.item.b47d2dd709e68b18": 1
+      },
+      "silver_cost": 12,
+      "result_item_canonical_id": "runtime.meal.cook.08",
+      "description": "北海渔港的奶白浓汤，冷天里最实在。",
+      "tier": 2,
+      "required_cooking_level": 3
+    },
+    {
+      "canonical_id": "recipe.cook.09",
+      "source_canonical_id": "recipe.cook.09",
+      "display_name": "汉堡鳕鱼排",
+      "port_city_canonical_id": "entity.city.a010634c03fc4600",
+      "cargo": {
+        "entity.item.0f8b49af64bf2861": 1,
+        "entity.item.e35e9fb1217e0f86": 1
+      },
+      "silver_cost": 15,
+      "result_item_canonical_id": "runtime.meal.cook.09",
+      "description": "裹上香料的面衣，炸得金黄酥脆。",
+      "tier": 2,
+      "required_cooking_level": 3
+    },
+    {
+      "canonical_id": "recipe.cook.10",
+      "source_canonical_id": "recipe.cook.10",
+      "display_name": "哥本哈根鲑鱼盘",
+      "port_city_canonical_id": "entity.city.aa28cc8cb68679d0",
+      "cargo": {
+        "entity.item.df9ccd92ec9d49f8": 1,
+        "entity.item.567cdb95bfd3aff8": 1
+      },
+      "silver_cost": 12,
+      "result_item_canonical_id": "runtime.meal.cook.10",
+      "description": "北欧人的轻食拼盘，配一块曲奇刚好。",
+      "tier": 2,
+      "required_cooking_level": 3
+    },
+    {
+      "canonical_id": "recipe.cook.11",
+      "source_canonical_id": "recipe.cook.11",
+      "display_name": "水手炖肉",
+      "port_city_canonical_id": "entity.city.511c0211c97166d9",
+      "cargo": {
+        "runtime.item.ead34659a24d689e": 1,
+        "entity.item.b47d2dd709e68b18": 1
+      },
+      "silver_cost": 10,
+      "result_item_canonical_id": "runtime.meal.cook.11",
+      "description": "山猪肉炖到软烂，是远航前的底气。",
+      "tier": 2,
+      "required_cooking_level": 3
+    },
+    {
+      "canonical_id": "recipe.cook.12",
+      "source_canonical_id": "recipe.cook.12",
+      "display_name": "带鱼饭团",
+      "port_city_canonical_id": "entity.city.12dbc1806d984e5a",
+      "cargo": {
+        "entity.item.04e39fd0404c8aaf": 1,
+        "runtime.market_item.1aac8b956f808df5": 1
+      },
+      "silver_cost": 10,
+      "result_item_canonical_id": "runtime.meal.cook.12",
+      "description": "大阪町人出门带着走的干粮。",
+      "tier": 2,
+      "required_cooking_level": 3
+    },
+    {
+      "canonical_id": "recipe.cook.13",
+      "source_canonical_id": "recipe.cook.13",
+      "display_name": "开普敦剑鱼排",
+      "port_city_canonical_id": "entity.city.4d0bd89dbb3b1e2a",
+      "cargo": {
+        "entity.item.4e09967b7446105d": 1,
+        "entity.item.e35e9fb1217e0f86": 1
+      },
+      "silver_cost": 18,
+      "result_item_canonical_id": "runtime.meal.cook.13",
+      "description": "好望角的硬菜，剑鱼厚切，火候利落。",
+      "tier": 3,
+      "required_cooking_level": 6
+    },
+    {
+      "canonical_id": "recipe.cook.14",
+      "source_canonical_id": "recipe.cook.14",
+      "display_name": "亚丁章鱼烧",
+      "port_city_canonical_id": "entity.city.e51457158a9475bb",
+      "cargo": {
+        "entity.item.ae1d91f7dc68ff3c": 1,
+        "entity.item.e35e9fb1217e0f86": 1,
+        "runtime.market_item.1aac8b956f808df5": 1
+      },
+      "silver_cost": 15,
+      "result_item_canonical_id": "runtime.meal.cook.14",
+      "description": "红海港口的铁板小吃，弹牙鲜香。",
+      "tier": 3,
+      "required_cooking_level": 6
+    },
+    {
+      "canonical_id": "recipe.cook.15",
+      "source_canonical_id": "recipe.cook.15",
+      "display_name": "孟买咖喱鱼",
+      "port_city_canonical_id": "entity.city.b3e70c2f31e0fe58",
+      "cargo": {
+        "entity.item.21d8bc915ab0231b": 1,
+        "entity.item.e35e9fb1217e0f86": 1,
+        "runtime.market_item.1aac8b956f808df5": 1
+      },
+      "silver_cost": 15,
+      "result_item_canonical_id": "runtime.meal.cook.15",
+      "description": "香料与椰浆的浓郁组合，配饭一绝。",
+      "tier": 3,
+      "required_cooking_level": 6
+    },
+    {
+      "canonical_id": "recipe.cook.16",
+      "source_canonical_id": "recipe.cook.16",
+      "display_name": "锡兰红茶鱼汤",
+      "port_city_canonical_id": "entity.city.cc3725a08bba1f2b",
+      "cargo": {
+        "runtime.market_item.7e005ba311f86fa7": 1,
+        "entity.item.2367efd718efc9d1": 1
+      },
+      "silver_cost": 12,
+      "result_item_canonical_id": "runtime.meal.cook.16",
+      "description": "茶香压住鱼腥，锡兰人的待客汤。",
+      "tier": 3,
+      "required_cooking_level": 6
+    },
+    {
+      "canonical_id": "recipe.cook.17",
+      "source_canonical_id": "recipe.cook.17",
+      "display_name": "马六甲鲈鱼饭",
+      "port_city_canonical_id": "entity.city.4f5799fbd242a852",
+      "cargo": {
+        "entity.item.d63a88b0de3df484": 1,
+        "runtime.market_item.1aac8b956f808df5": 1,
+        "entity.item.e35e9fb1217e0f86": 1
+      },
+      "silver_cost": 15,
+      "result_item_canonical_id": "runtime.meal.cook.17",
+      "description": "海峡商路带来的混搭风味。",
+      "tier": 3,
+      "required_cooking_level": 6
+    },
+    {
+      "canonical_id": "recipe.cook.18",
+      "source_canonical_id": "recipe.cook.18",
+      "display_name": "莫桑比克烤鳗",
+      "port_city_canonical_id": "entity.city.e1f39f29db933bf8",
+      "cargo": {
+        "entity.item.5ee8bc9d7bd62050": 1,
+        "entity.item.b47d2dd709e68b18": 1
+      },
+      "silver_cost": 15,
+      "result_item_canonical_id": "runtime.meal.cook.18",
+      "description": "非洲东岸的炭烤鳗鱼，油脂滴在火上滋滋响。",
+      "tier": 3,
+      "required_cooking_level": 6
+    },
+    {
+      "canonical_id": "recipe.cook.19",
+      "source_canonical_id": "recipe.cook.19",
+      "display_name": "泉州剑鱼刺身",
+      "port_city_canonical_id": "entity.city.3f395aab4eb9614b",
+      "cargo": {
+        "entity.item.4e09967b7446105d": 1,
+        "entity.item.b47d2dd709e68b18": 1
+      },
+      "silver_cost": 20,
+      "result_item_canonical_id": "runtime.meal.cook.19",
+      "description": "刀工与新鲜度缺一不可。",
+      "tier": 4,
+      "required_cooking_level": 9
+    },
+    {
+      "canonical_id": "recipe.cook.20",
+      "source_canonical_id": "recipe.cook.20",
+      "display_name": "大阪章鱼烧",
+      "port_city_canonical_id": "entity.city.12dbc1806d984e5a",
+      "cargo": {
+        "entity.item.ae1d91f7dc68ff3c": 1,
+        "runtime.market_item.1aac8b956f808df5": 1,
+        "entity.item.e35e9fb1217e0f86": 1
+      },
+      "silver_cost": 18,
+      "result_item_canonical_id": "runtime.meal.cook.20",
+      "description": "街头铁板上的圆丸子，趁热吃。",
+      "tier": 4,
+      "required_cooking_level": 9
+    },
+    {
+      "canonical_id": "recipe.cook.21",
+      "source_canonical_id": "recipe.cook.21",
+      "display_name": "京都鳗鱼饭",
+      "port_city_canonical_id": "entity.city.1bbd7c60de1fc377",
+      "cargo": {
+        "entity.item.5ee8bc9d7bd62050": 1,
+        "runtime.market_item.1aac8b956f808df5": 1
+      },
+      "silver_cost": 20,
+      "result_item_canonical_id": "runtime.meal.cook.21",
+      "description": "酱汁反复刷烤，米饭吸饱香气。",
+      "tier": 4,
+      "required_cooking_level": 9
+    },
+    {
+      "canonical_id": "recipe.cook.22",
+      "source_canonical_id": "recipe.cook.22",
+      "display_name": "长安肉夹馍宴",
+      "port_city_canonical_id": "entity.city.0fb27847083d81ed",
+      "cargo": {
+        "entity.item.5d65016bfdaff92d": 1,
+        "runtime.item.ead34659a24d689e": 1,
+        "entity.item.e35e9fb1217e0f86": 1
+      },
+      "silver_cost": 20,
+      "result_item_canonical_id": "runtime.meal.cook.22",
+      "description": "长安西市的豪客吃法，肉夹馍配炖肉。",
+      "tier": 4,
+      "required_cooking_level": 9
+    },
+    {
+      "canonical_id": "recipe.cook.23",
+      "source_canonical_id": "recipe.cook.23",
+      "display_name": "泉州金枪鱼饭",
+      "port_city_canonical_id": "entity.city.3f395aab4eb9614b",
+      "cargo": {
+        "entity.item.171fa2b2decb00e4": 1,
+        "runtime.market_item.1aac8b956f808df5": 1
+      },
+      "silver_cost": 25,
+      "result_item_canonical_id": "runtime.meal.cook.23",
+      "description": "厚切金枪鱼铺满饭面，港口工人的力气来源。",
+      "tier": 4,
+      "required_cooking_level": 9
+    },
+    {
+      "canonical_id": "recipe.cook.24",
+      "source_canonical_id": "recipe.cook.24",
+      "display_name": "大阪蓝鳍寿司",
+      "port_city_canonical_id": "entity.city.12dbc1806d984e5a",
+      "cargo": {
+        "entity.item.892e62aaca68c7ed": 1,
+        "runtime.market_item.1aac8b956f808df5": 1
+      },
+      "silver_cost": 30,
+      "result_item_canonical_id": "runtime.meal.cook.24",
+      "description": "顶级蓝鳍，入口即化。",
+      "tier": 4,
+      "required_cooking_level": 9
+    },
+    {
+      "canonical_id": "recipe.cook.25",
+      "source_canonical_id": "recipe.cook.25",
+      "display_name": "科潘鲯鳅盛宴",
+      "port_city_canonical_id": "entity.city.91a0b6d8c852c77c",
+      "cargo": {
+        "entity.item.7af18ef7341d1b59": 1,
+        "entity.item.e35e9fb1217e0f86": 1,
+        "entity.item.b47d2dd709e68b18": 1
+      },
+      "silver_cost": 30,
+      "result_item_canonical_id": "runtime.meal.cook.25",
+      "description": "雨林边缘的丰盛大餐，香料铺满整条鱼。",
+      "tier": 5,
+      "required_cooking_level": 12
+    },
+    {
+      "canonical_id": "recipe.cook.26",
+      "source_canonical_id": "recipe.cook.26",
+      "display_name": "玛雅潘烤鲯鲨",
+      "port_city_canonical_id": "entity.city.c507c1cf040924c5",
+      "cargo": {
+        "entity.item.471835bd599734dc": 1,
+        "entity.item.e35e9fb1217e0f86": 2
+      },
+      "silver_cost": 30,
+      "result_item_canonical_id": "runtime.meal.cook.26",
+      "description": "加勒比海的猛鱼，烤到外皮焦脆。",
+      "tier": 5,
+      "required_cooking_level": 12
+    },
+    {
+      "canonical_id": "recipe.cook.27",
+      "source_canonical_id": "recipe.cook.27",
+      "display_name": "加勒比海盗炖锅",
+      "port_city_canonical_id": "entity.city.cd1aa779f4c5ab65",
+      "cargo": {
+        "runtime.item.349eb023b28e6370": 1,
+        "entity.item.86912d08adaae017": 1,
+        "entity.item.e35e9fb1217e0f86": 1
+      },
+      "silver_cost": 25,
+      "result_item_canonical_id": "runtime.meal.cook.27",
+      "description": "海盗船上的大锅菜，朗姆酒直接倒进去。",
+      "tier": 5,
+      "required_cooking_level": 12
+    },
+    {
+      "canonical_id": "recipe.cook.28",
+      "source_canonical_id": "recipe.cook.28",
+      "display_name": "伊斯坦堡烤鲈鱼",
+      "port_city_canonical_id": "entity.city.89fe5ed076412e8e",
+      "cargo": {
+        "entity.item.d63a88b0de3df484": 1,
+        "entity.item.e35e9fb1217e0f86": 1,
+        "runtime.market_item.1aac8b956f808df5": 1
+      },
+      "silver_cost": 25,
+      "result_item_canonical_id": "runtime.meal.cook.28",
+      "description": "博斯普鲁斯海峡边的烤鱼，配饭最香。",
+      "tier": 5,
+      "required_cooking_level": 12
+    },
+    {
+      "canonical_id": "recipe.cook.29",
+      "source_canonical_id": "recipe.cook.29",
+      "display_name": "蓬莱仙宴",
+      "port_city_canonical_id": "entity.city.4e787399665b40a0",
+      "cargo": {
+        "entity.item.636479f986fb7845": 1,
+        "entity.item.3855a868ca7393f3": 1,
+        "entity.item.e35e9fb1217e0f86": 1
+      },
+      "silver_cost": 35,
+      "result_item_canonical_id": "runtime.meal.cook.29",
+      "description": "传说中仙人待客的宴席，汤色如玉。",
+      "tier": 5,
+      "required_cooking_level": 12
+    },
+    {
+      "canonical_id": "recipe.cook.30",
+      "source_canonical_id": "recipe.cook.30",
+      "display_name": "远洋船长盛宴",
+      "port_city_canonical_id": "entity.city.511c0211c97166d9",
+      "cargo": {
+        "entity.item.d8de9d63303ed6b4": 1,
+        "runtime.item.6e1ec2b8b4a1f49a": 1,
+        "entity.item.e35e9fb1217e0f86": 1,
+        "entity.item.86912d08adaae017": 1
+      },
+      "silver_cost": 40,
+      "result_item_canonical_id": "runtime.meal.cook.30",
+      "description": "只有远洋船长才配得上的压轴大菜。",
+      "tier": 5,
+      "required_cooking_level": 12
     }
   ],
   "trade_goods": [
@@ -287547,7 +289026,7 @@
     "preview_routes_supported": false,
     "normal_runtime_reads_this_section": false
   },
-  "content_sha256": "efc17b388dbb8fb27771cf05fd9a9446bd2af2a0b71130c198f9878265fa7b2e",
+  "content_sha256": "f9c758c75aace9093f220de132098a029cf7b66b0074317c5d6a92e5d00c9e53",
   "entity_counts": {
     "tasks": 651,
     "cities": 28,
@@ -287558,7 +289037,7 @@
     "npc_placements": 359,
     "monsters": 261,
     "monster_placements": 276,
-    "content_entities": 218,
+    "content_entities": 283,
     "item_sources": 151,
     "ships": 21,
     "voyage_routes": 702,

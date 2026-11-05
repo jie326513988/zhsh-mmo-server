@@ -20,8 +20,15 @@ export function createGameApi({ base = '' } = {}) {
     const data = await response.json().catch(() => ({}));
     if (!response.ok) {
       const failure = new Error(data.error || `请求失败：${response.status}`);
-    failure.statusCode = response.status;
-    throw failure;
+      failure.statusCode = response.status;
+      // 401 = 令牌已失效（服务器重启后换了 secret、或账号已不存在）：清掉本地登录态，
+      // 让界面回到登录页，而不是把「未登录或登录已过期」当致命错误展示。
+      if (auth && response.status === 401) {
+        failure.authExpired = true;
+        setToken(null);
+        clearPlayer();
+      }
+      throw failure;
     }
     return data;
   }
@@ -52,6 +59,11 @@ export function createGameApi({ base = '' } = {}) {
     if (!player?.player_canonical_id) return;
     currentPlayerId = player.player_canonical_id;
     if (typeof localStorage !== 'undefined') localStorage.setItem('zhsh_player_id', currentPlayerId);
+  }
+
+  function clearPlayer() {
+    currentPlayerId = null;
+    if (typeof localStorage !== 'undefined') localStorage.removeItem('zhsh_player_id');
   }
 
   // ---- 游戏状态 ----
@@ -116,12 +128,18 @@ export function createGameApi({ base = '' } = {}) {
     return request('/api/game/task_narrative', { method: 'POST', body: payload });
   }
 
+  /** AI 状态（本地/联网、模型名、成功率；不含密钥） */
+  async function aiStatus() {
+    return request('/api/ai/status', { auth: false });
+  }
+
   function getToken() { return token; }
   function getPlayerId() { return currentPlayerId; }
 
   return {
     request, register, login, setToken, setPlayer,
     getState, action, runtime, importSave, getWorld, getPlayers, getIntel, npcBanter, combatNarrative, marketAdvice, discoveryDescription, taskNarrative,
+    aiStatus,
     admin, getCurrentWorld,
     getToken, getPlayerId,
   };

@@ -44,7 +44,9 @@
 
 ### 启动游戏（Windows 推荐）
 
-本仓库即完整的游戏本身：游戏服务器 + 浏览器客户端。**Windows 用户直接双击根目录 `启动游戏.cmd`**（或 `启动游戏.vbs`，无控制台窗口），游戏服务器将以**系统托盘**方式常驻后台并自动打开浏览器；右键托盘图标可「打开游戏 / 启动服务器 / 停止服务器 / 退出」。
+本仓库即完整的游戏本身：游戏服务器 + 浏览器客户端。**Windows 用户直接双击根目录 `启动游戏.cmd`**（或 `启动游戏.vbs`，无控制台窗口），游戏服务器将以**系统托盘**方式常驻后台并自动打开浏览器。
+
+**首次启动会先弹出「AI 设置」窗口**，让你选择本局用本地模型、联网模型还是关闭 AI（详见下节）。之后右键托盘图标可「打开游戏 / AI 设置 / 重启服务器 / 停止服务器 / 退出」，托盘提示文字会显示当前 AI 后端。任何时候想改配置，双击根目录 `ai-setup.cmd` 即可。
 
 - 服务器监听 `http://0.0.0.0:4173`；浏览器打开 `http://127.0.0.1:4173/`，**注册账号**即可进入。
 - 局域网其他设备：`http://<本机局域网IP>:4173/`（首次启动自动放行防火墙端口）。
@@ -61,7 +63,51 @@ node server/server.js
 服务器监听 `http://0.0.0.0:4173`。经济 tick / AI tick 间隔可用 `ZHSH_ECO_TICK_MS` / `ZHSH_AI_TICK_MS` 调整。
 
 ### AI 模型（可选，增强体验）
-AI 系统依赖本地 ollama（默认 `http://127.0.0.1:11434`，`qwen3.8-2b/4b-distill`、`qwen3.5:9b`）。未部署时 AI 场景走规则保底（游戏核心玩法不受影响）。模型可用 `ZHSH_AI_MODEL` / `ZHSH_AI_MODEL_LIGHT` / `ZHSH_AI_MODEL_FAST` 切换。
+AI 是**同一个服务器进程内**的调用，没有独立的启动命令：起服务器时自动接入，未配置模型时各场景走规则保底（游戏核心玩法不受影响）。全部经由 `server/ai/ai-decision-service.js` 单一出口。
+
+**图形化选择（推荐）**：双击 `ai-setup.cmd`，或在双击 `启动游戏.cmd` 时按提示选择。
+
+| 模式 | 行为 | 适用 |
+| --- | --- | --- |
+| 本地模型（ollama） | 调 `http://127.0.0.1:11434`，免费可离线 | 有独立显卡、在意零成本 |
+| 联网模型（OpenAI 兼容） | 调云端 API，按量计费，无需本地算力 | 机器较弱、想要更好的文笔 |
+| 关闭 AI | 零调用零费用，全部走规则保底，AI 玩家也不启动 | 只想玩数值与剧情 |
+
+窗口里有「测试连接」按钮，会真实请求 `/api/tags` 或 `/v1/models` 并检查模型名是否存在。本地模式下，打开窗口或点「测试连接」都会自动拉起 ollama（仅限 `127.0.0.1/localhost`），所以不必先手动启动服务；若提示缺模型，按提示 `ollama pull` 补齐即可；设置保存在根目录 `ai-config.json`（**含 API Key，已被 .gitignore 排除**）。游戏内「设置」页也能看到当前后端、模型、调用成功率与最近错误。
+
+以下是等价的命令行配置方式：
+
+**A. 本地 ollama（默认）** —— 默认 `ZHSH_OLLAMA_URL=http://127.0.0.1:11434`：
+
+```powershell
+ollama pull qwen3.5:4b   # 内容生成主力（9 个场景用它）
+ollama pull qwen3.5:2b   # AI 玩家高频决策用它
+setx ZHSH_AI_MODEL_LIGHT "qwen3.5:4b"   # 必须覆盖：代码默认的 qwen3.8-*-distill 在 ollama 库中不存在
+setx ZHSH_AI_MODEL_FAST  "qwen3.5:2b"
+```
+
+**B. 联网模型（OpenAI 兼容）** —— 任何 OpenAI 兼容服务皆可，无需本地算力：
+
+```powershell
+setx ZHSH_AI_PROVIDER "openai"
+setx ZHSH_AI_BASE_URL "https://api.deepseek.com/v1"   # 含版本段，不含 /chat/completions
+setx ZHSH_AI_API_KEY  "sk-..."
+setx ZHSH_AI_MODEL    "deepseek-chat"                 # LIGHT/FAST 未单独设置时都回落到它
+```
+
+常见服务的 `ZHSH_AI_BASE_URL`：DeepSeek `https://api.deepseek.com/v1`、通义千问 `https://dashscope.aliyuncs.com/compatible-mode/v1`、Kimi `https://api.moonshot.cn/v1`、智谱 `https://open.bigmodel.cn/api/paas/v4`、SiliconFlow `https://api.siliconflow.cn/v1`、OpenRouter `https://openrouter.ai/api/v1`。
+
+| 变量 | 默认 | 说明 |
+| --- | --- | --- |
+| `ZHSH_AI_PROVIDER` | `ollama` | `openai` 切到联网模型 |
+| `ZHSH_AI_MODEL` / `_LIGHT` / `_FAST` | 见上 | 三层模型，`_LIGHT` 覆盖 9 个叙事场景，`_FAST` 只给 AI 玩家 |
+| `ZHSH_AI_TIMEOUT_MS` | 云端 30000 / 本地 60000 | 单请求超时，超时中断以释放并发槽 |
+| `ZHSH_AI_CONCURRENCY` | `2` | 同时进行的模型请求上限 |
+| `ZHSH_AI_TICK_MS` | `45000` | AI 玩家决策节奏（联网时建议调大以省额度） |
+| `ZHSH_AI_DISABLED` | — | 设 `1` 彻底关闭 AI：不发起任何请求，AI 玩家也不启动 |
+| `ZHSH_ECO_AI` | 开启 | 设 `0` 关闭经济事件 AI（注意：市场综述 AI 不受它控制） |
+
+> **成本提示**：AI 玩家每 tick 对 3 名船员各请求一次，加上经济引擎每分钟一条市场综述，**挂机基线约 7 次/分钟（约 1 万次/天）**。用联网模型时建议调大 `ZHSH_AI_TICK_MS`，或按需灰度。
 
 ## 构建与数据
 
@@ -72,6 +118,23 @@ node scripts/build-browser.js
 ```
 
 重新生成内容后，`server/data/runtime.sqlite` 会基于内容库重建。
+
+## 数据与缓存位置
+
+游戏本体**只写仓库所在目录**，不会向系统盘写存档或缓存：
+
+| 内容 | 位置 |
+| --- | --- |
+| 账号库 / 玩家存档 / 经济状态 | `server/data/`（`accounts.db`、`runtime.sqlite`、`economy.json`） |
+| 内容库 | `data/zhsh-content.sqlite` |
+| 客户端构建产物 | `dist/`（可用 `npm run build` 随时重建） |
+| AI 设置（含 API Key） | 根目录 `ai-config.json`（已 gitignore） |
+| 浏览器侧 | 仅 `localStorage` 两条键（登录 token、角色 id）。所有静态资源带 `Cache-Control: no-store`，浏览器**不会**把那份 15MB 内容包写进磁盘缓存 |
+| 本地 ollama 模型 | 默认 `%USERPROFILE%\.ollama\models`（数 GB），由 `OLLAMA_MODELS` 决定；本机已设为 `E:\ollama-models`。换盘只改这个变量并重启 ollama |
+| ollama 程序本体 | 本机装在 `E:\Ollama`（3.16 GB，经官方 `/DIR=` 参数指定；`C:\...\Local\Programs\Ollama` 不存在）。重装用 `ollama-install.cmd`，支持断点续传并校验数字签名 |
+| ollama 日志与配置 | `%LOCALAPPDATA%\Ollama`（约 0.2 MB，日志/设置库）与 `%USERPROFILE%\.ollama`（SSH 密钥等，KB 级）——这两处由 ollama 自身固定，无法改盘 |
+
+最后两行属于浏览器与 ollama 自身的行为，与游戏无关；不想在 C 盘产生任何模型文件时，AI 选择「联网模型」或「关闭」即可。
 
 ## 测试
 
