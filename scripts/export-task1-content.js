@@ -82,7 +82,11 @@ function exportTask1Content({ databasePath = defaultDatabase,outputPath = defaul
     const evidenceCityNames=unique(selection.selected_tasks.flatMap((entry)=>entry.evidence.required_cities??[]));
     const evidenceCityIds=selectIn(db,'SELECT canonical_id FROM cities WHERE display_name IN (__IN__) ORDER BY canonical_id',evidenceCityNames).map((entry)=>entry.canonical_id);
     const cityIds = unique(taskLocations.map((entry) => entry.city_canonical_id).concat(evidenceCityIds));
-    const cities = selectIn(db,'SELECT canonical_id,source_canonical_id,display_name FROM cities WHERE canonical_id IN (__IN__) ORDER BY canonical_id',cityIds);
+    // 城内地图：原版 cities.grid_json 是「地点名字/空格」矩阵，客户端据此还原空间排布
+    const cities = selectIn(db,`SELECT canonical_id,source_canonical_id,display_name,grid_rows,grid_columns_max,grid_json
+      FROM cities WHERE canonical_id IN (__IN__) ORDER BY canonical_id`,cityIds)
+      .map((city)=>({ canonical_id:city.canonical_id,source_canonical_id:city.source_canonical_id,display_name:city.display_name,
+        grid:city.grid_json?{ rows:Number(city.grid_rows),columns:Number(city.grid_columns_max),cells:JSON.parse(city.grid_json) }:null }));
     const locations = selectIn(db,`
       SELECT l.canonical_id,l.source_canonical_id,l.display_name,l.description,l.is_derived,
         c.canonical_id city_canonical_id,c.display_name city_display_name
@@ -335,11 +339,11 @@ function collectFormalGameplay(db,{ requiredMonsterIds,tasks,selection,cityIds,r
   const selectedShopEntries=[];
   for(const selected of selection.selected_tasks)for(const resolution of selected.runtime_item_resolutions.filter((entry)=>entry.formal_source.source_kind==='shop')) {
     const task=tasks.find((entry)=>entry.canonical_id===selected.canonical_id);
-    const targetLocation=db.prepare(`SELECT l.canonical_id location_canonical_id,l.display_name,c.display_name city_display_name,mn.canonical_id map_node_canonical_id
+    const targetLocation=db.prepare(`SELECT l.canonical_id location_canonical_id,l.display_name location_display_name,c.display_name city_display_name,mn.canonical_id map_node_canonical_id
       FROM locations l JOIN cities c ON c.id=l.city_id JOIN map_nodes mn ON mn.location_id=l.id WHERE l.canonical_id=?`).get(task.target_location_canonical_id);
     const receiveCity=db.prepare(`SELECT c.display_name FROM locations l JOIN cities c ON c.id=l.city_id WHERE l.canonical_id=?`).get(task.receive_location_canonical_id)?.display_name;
     const sourceCity=ports.find((port)=>normalizeCityName(port.city_display_name)===normalizeCityName(resolution.formal_source.region_label))?.city_display_name;
-    const location=targetLocation?.display_name==='商店'?targetLocation:db.prepare(`SELECT l.canonical_id location_canonical_id,mn.canonical_id map_node_canonical_id
+    const location=targetLocation?.location_display_name==='商店'?targetLocation:db.prepare(`SELECT l.canonical_id location_canonical_id,mn.canonical_id map_node_canonical_id
       FROM locations l JOIN cities c ON c.id=l.city_id JOIN map_nodes mn ON mn.location_id=l.id
       WHERE c.display_name=? AND l.display_name='商店'`).get(sourceCity??receiveCity);
     const entry=db.prepare(`SELECT se.canonical_id,se.source_canonical_id,se.price,ce.canonical_id content_entity_canonical_id,

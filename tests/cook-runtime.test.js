@@ -40,8 +40,9 @@ function baseState() {
 test('cook consumes ingredients, charges money, and grants the meal item', () => {
   const cargo = { 'item.ing.bread': 1, 'item.ing.water': 1 };
   const recipe = { canonical_id: 'recipe.stew', port_city_canonical_id: 'city.venice', cargo, silver_cost: 50,
-    result_item_canonical_id: 'item.meal.stew', description: 'x' };
+    result_item_canonical_id: 'item.meal.stew', description: 'x', tier: 1, required_cooking_level: 1 };
   const st = baseState();
+  st.cooking = { level: 1, exp: 0, learned: ['recipe.stew'] };
   st.inventory = { 'item.ing.bread': 1, 'item.ing.water': 1 };
   st.player.current_map_node_canonical_id = 'node.dock';
   const content = { locations: [{ canonical_id: 'loc.dock', city_canonical_id: 'city.venice' }], map_nodes: [{ map_node_canonical_id: 'node.dock', location_canonical_id: 'loc.dock' }] };
@@ -56,8 +57,9 @@ test('cook consumes ingredients, charges money, and grants the meal item', () =>
 });
 
 test('cook rejects insufficient ingredients', () => {
-  const recipe = { canonical_id: 'recipe.stew', port_city_canonical_id: 'city.venice', cargo: { 'item.ing.bread': 2 }, silver_cost: 0, result_item_canonical_id: 'item.meal.stew' };
+  const recipe = { canonical_id: 'recipe.stew', port_city_canonical_id: 'city.venice', cargo: { 'item.ing.bread': 2 }, silver_cost: 0, result_item_canonical_id: 'item.meal.stew', tier: 1, required_cooking_level: 1 };
   const st = baseState();
+  st.cooking = { level: 1, exp: 0, learned: ['recipe.stew'] };
   st.inventory = { 'item.ing.bread': 1 };
   st.player.current_map_node_canonical_id = 'node.dock';
   const content = { locations: [{ canonical_id: 'loc.dock', city_canonical_id: 'city.venice' }], map_nodes: [{ map_node_canonical_id: 'node.dock', location_canonical_id: 'loc.dock' }] };
@@ -93,4 +95,32 @@ test('consumeMealBattle decrements remaining battles and clears at zero', () => 
   const after2 = consumeMealBattle(st);
   assert.equal(after2, null);
   assert.equal(st.player.meal_buff, null);
+});
+
+test('learn consumes a recipe scroll and permanently unlocks the recipe', () => {
+  const recipe = { canonical_id: 'recipe.new', display_name: '新菜', tier: 2, required_cooking_level: 3,
+    port_city_canonical_id: 'city.venice', cargo: {}, silver_cost: 0, result_item_canonical_id: 'item.meal.new' };
+  const scroll = { canonical_id: 'item.recipe.new', normalized_data: { catalog: 'recipeItems', recipe_canonical_id: 'recipe.new' } };
+  const st = baseState();
+  st.inventory = { 'item.recipe.new': 1 };
+  const cook = new CookRuntime({ storage: memStorage(st), catalog: catalogFor([recipe], [scroll, mealItem('new', {})], [], []) });
+  const res = cook.learn('p1', 'item.recipe.new', 'ev-learn');
+  assert.equal(res.action, 'recipe_learned');
+  assert.equal(res.recipe_canonical_id, 'recipe.new');
+  assert.equal(st.inventory['item.recipe.new'], undefined);
+  assert.ok(st.cooking.learned.includes('recipe.new'));
+  assert.throws(() => cook.learn('p1', 'item.recipe.new', 'ev-learn-2'), /没有这本食谱/);
+});
+
+test('cook rejects recipes that are not learned or below the required cooking level', () => {
+  const recipe = { canonical_id: 'recipe.new', display_name: '新菜', tier: 2, required_cooking_level: 3,
+    port_city_canonical_id: 'city.venice', cargo: {}, silver_cost: 0, result_item_canonical_id: 'item.meal.new' };
+  const content = { locations: [{ canonical_id: 'loc.dock', city_canonical_id: 'city.venice' }], map_nodes: [{ map_node_canonical_id: 'node.dock', location_canonical_id: 'loc.dock' }] };
+  const st = baseState();
+  st.player.current_map_node_canonical_id = 'node.dock';
+  st.cooking = { level: 1, exp: 0, learned: [] };
+  const cook = new CookRuntime({ storage: memStorage(st), catalog: catalogFor([recipe], [mealItem('new', {})], [], [], content) });
+  assert.throws(() => cook.cook('p1', 'recipe.new', 'ev-1'), /还没学会/);
+  st.cooking = { level: 1, exp: 0, learned: ['recipe.new'] };
+  assert.throws(() => cook.cook('p1', 'recipe.new', 'ev-2'), /厨艺等级不足/);
 });

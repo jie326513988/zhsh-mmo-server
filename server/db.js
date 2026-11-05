@@ -13,7 +13,7 @@ const { openSqliteRuntime } = require('../src/task-runtime/index.js');
 const ROOT = path.resolve(__dirname, '..');
 const CONTENT_DB = process.env.ZHSH_CONTENT_DB || path.join(ROOT, 'data', 'zhsh-content.sqlite');
 const RUNTIME_DB = process.env.ZHSH_RUNTIME_DB || path.join(__dirname, 'data', 'runtime.sqlite');
-const ACCOUNT_DB = path.join(__dirname, 'data', 'accounts.db');
+const ACCOUNT_DB = process.env.ZHSH_ACCOUNT_DB || path.join(__dirname, 'data', 'accounts.db');
 
 function ensureRuntimeDb() {
   fs.mkdirSync(path.dirname(RUNTIME_DB), { recursive: true });

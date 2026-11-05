@@ -115,9 +115,15 @@ setx ZHSH_AI_MODEL    "deepseek-chat"                 # LIGHT/FAST 未单独设�
 # 重新生成数据库与客户端内容
 node scripts/import-content.js
 node scripts/build-browser.js
+
+# UI 截图巡检（Edge headless，产物在 artifacts/ui-shots/）
+npm run ui:shots
 ```
 
 重新生成内容后，`server/data/runtime.sqlite` 会基于内容库重建。
+
+界面排版约定（经典 WAP：不用 Grid/圆角，靠 flex 百分比 + 固定图标槽 + table 对齐）见
+[`docs/design/ui-patterns.md`](docs/design/ui-patterns.md)。
 
 ## 数据与缓存位置
 

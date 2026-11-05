@@ -21,8 +21,7 @@ test('incremental DOM imports accepted 72-task fixture, formally acquires the lo
   const scenario=new DomGameplayScenario({root,url:server.url,scenario:'combat-survival-incremental',legacyFixture:baseline});const started=Date.now();
   try{
     scenario.startedAt=new Date().toISOString();scenario.stage='import accepted 72-task save';await scenario.openBrowser();await scenario.page.navigate(server.url);
-    await scenario.page.waitFor(()=>document.querySelector('[data-action="import-save"]'),{label:'formal save import control'});
-    await scenario.page.chooseFile('[data-action="import-save"]',fixturePath);scenario.uiClicks+=1;await scenario.waitPage('location');
+    await scenario.importFixture(fixturePath);
     scenario.currentNode=baseline.state.player.current_map_node_canonical_id;const initial=await scenario.readStatus();assert.equal(initial.completed,72);assert.equal(initial.total,78);
     await scenario.prepareCombatSurvival();assert.equal(scenario.formalEquipmentAcquisition.length,1);
     const allocation=scenario.combatSurvivalAllocation;assert.equal(allocation.newly_selected_task_ids.length,6);

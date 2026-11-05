@@ -28,8 +28,7 @@ test('release DOM maritime scenario proves fishing, cross-city task flow, diving
   try{
     scenario.startedAt=new Date().toISOString();scenario.stage='import accepted 57-task checkpoint';
     await scenario.openBrowser();await scenario.page.navigate(server.url);
-    await scenario.page.waitFor(()=>document.querySelector('[data-action="import-save"]'),{label:'formal save import control'});
-    await scenario.page.chooseFile('[data-action="import-save"]',fixturePath);scenario.uiClicks+=1;await scenario.waitPage('location');
+    await scenario.importFixture(fixturePath);
     await scenario.page.waitFor(()=>document.querySelector('#save-status')?.textContent==='导入结果已保存',{label:'maritime checkpoint import completion'});
     scenario.currentNode=baseline.state.player.current_map_node_canonical_id;await scenario.measure('release_maritime_import');await scenario.selectSeries('task.series.05');
 

@@ -152,6 +152,20 @@ class DomGameplayScenario{
     await this.page.waitFor(()=>document.querySelector('#save-status')?.textContent==='导入结果已保存',{label:'save round-trip import'});
     this.currentNode=await this.identifyCurrentNode();
   }
+  /** 服务器权威版：导入必须绑定账号。未登录时先注册临时账号，再去「存档」页选文件导入。 */
+  async importFixture(file){
+    await this.page.waitFor(()=>document.querySelector('[data-action="auth-register"], .primary-nav'),{label:'start page ready'});
+    if(await this.page.countVisible('[data-action="auth-register"]')===1){
+      const username=(`dom${Date.now().toString(36).slice(-6)}`).slice(0,12);
+      await this.page.evaluate(`(()=>{const fill=(sel,value)=>{const input=document.querySelector(sel);if(!input)return false;input.value=value;input.dispatchEvent(new Event('input',{bubbles:true}));input.dispatchEvent(new Event('change',{bubbles:true}));return true;};return fill('input[placeholder*="角色名"]',${JSON.stringify(username)})&&fill('input[placeholder*="密码"]','test1234');})()`);
+      await this.click('[data-action="auth-register"]',{save:true});
+      await this.waitPage('location');
+    }
+    await this.ensurePage('save');
+    await this.page.chooseFile('[data-action="import-save"]',file);this.uiClicks+=1;
+    await this.page.waitFor(()=>document.querySelector('#save-status')?.textContent==='导入结果已保存',{label:'fixture import completion',timeout:20000});
+    await this.waitPage('location');
+  }
 
   async ensureLocationPage(){
     const name=await this.page.pageName();if(name==='location')return;
@@ -371,10 +385,17 @@ class DomGameplayScenario{
     await this.ensurePage('tasks');await this.measure('task_series_selector');
     const active=this.content.series.find((entry)=>entry.canonical_id===seriesId);
     for(let attempt=0;attempt<3;attempt+=1){
-      await this.click(selector('data-series-select',seriesId),{save:true});
+      // 系列选择器默认折叠在 <details> 里：先展开再点
+      await this.page.evaluate("(()=>{const d=document.querySelector('.series-switch');if(d&&!d.open)d.open=true;})()").catch(()=>{});
       const text=await this.page.text('.wap-page')??'';
-      if(new RegExp(`当前系列：${escapeRegExp(active.display_name)}`).test(text))break;
-      if(attempt===2)assert.match(text,new RegExp(`当前系列：${escapeRegExp(active.display_name)}`));
+      const alreadyActive=new RegExp(`当前系列：${escapeRegExp(active.display_name)}`).test(text);
+      const visible=await this.page.countVisible(selector('data-series-select',seriesId));
+      if(visible===0){ if(alreadyActive) break; throw new Error(`series selector not visible: ${seriesId}`); }
+      if(alreadyActive){ this.seriesEntered.add(seriesId); return; }
+      await this.click(selector('data-series-select',seriesId),{save:true});
+      const after=await this.page.text('.wap-page')??'';
+      if(new RegExp(`当前系列：${escapeRegExp(active.display_name)}`).test(after))break;
+      if(attempt===2)assert.match(after,new RegExp(`当前系列：${escapeRegExp(active.display_name)}`));
       await this.page.reload().catch(()=>{});await this.waitPage('location');await this.ensurePage('tasks');
     }
     this.seriesEntered.add(seriesId);

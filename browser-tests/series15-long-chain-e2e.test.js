@@ -29,8 +29,7 @@ test('representative DOM chain 15.455 through 15.472 completes through visible b
   try{
     scenario.stage='import audited 15.454 checkpoint';
     await scenario.openBrowser();await scenario.page.navigate(server.url);
-    await scenario.page.waitFor(()=>document.querySelector('[data-action="import-save"]'),{label:'series15 checkpoint import control'});
-    await scenario.page.chooseFile('[data-action="import-save"]',fixturePath);scenario.uiClicks+=1;await scenario.waitPage('location');
+    await scenario.importFixture(fixturePath);
     await scenario.page.waitFor(()=>document.querySelector('#save-status')?.textContent==='导入结果已保存',{label:'series15 checkpoint import completion'});
     scenario.currentNode=checkpoint.state.player.current_map_node_canonical_id;
     await scenario.measure('series15_long_chain_import');

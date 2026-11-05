@@ -38,6 +38,79 @@ summary { cursor:pointer;font-weight:700; }
 .inline-links,.map-links { display:flex;flex-wrap:wrap;column-gap:12px;row-gap:2px;margin:3px 0; }
 .map-links { align-items:baseline; }
 .map-overview p { margin:2px 0; }
+/* 城内地图：按原版网格还原空间排布（★当前位置，蓝色可前往） */
+.map-hint { color:var(--muted);font-size:13px; }
+.map-scope { font-size:13px; }
+.map-scope .text-link[disabled] { color:var(--muted);text-decoration:none; }
+.city-map-table { width:100%;border-collapse:collapse;table-layout:fixed;margin:6px 0 12px;background:#faf7f0;border:1px solid var(--rule); }
+.city-map-table td { padding:2px;vertical-align:middle; }
+.map-chip { display:block;width:100%;box-sizing:border-box;padding:4px 2px;border:1px solid #ddd4c0;background:#fffdf7;color:#6b5b45;font-size:11px;line-height:1.15;text-align:center;white-space:normal;word-break:break-all;min-height:24px; }
+.map-chip.is-adjacent { border-color:#2f6fad;background:#eef6ff;color:#1d4f8a;cursor:pointer; }
+.map-chip.is-current { border-color:#b23b3b;background:#fdecec;color:#a02020;font-weight:700; }
+.map-offgrid { color:var(--muted);font-size:13px; }
+/* 全城视图：4 列地名表格（参考站「地图全景」的排法） */
+.city-map-table.is-list td { padding:2px 4px;text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
+.city-map-item { display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:left; }
+.city-map-item.is-current { color:#a02020;font-weight:700; }
+/* 当前位置的 NPC 列表：固定图标位 + 两列对齐 */
+.npc-grid { display:flex;flex-wrap:wrap;gap:2px 10px;margin:3px 0; }
+.npc-item { display:flex;align-items:center;gap:4px;flex:1 1 calc(50% - 10px);max-width:calc(50% - 10px);min-width:0;text-align:left; }
+.npc-icon { display:inline-flex;flex:0 0 20px;width:20px;height:20px;align-items:center;justify-content:center; }
+.npc-icon .item-icon { width:20px;height:20px;margin:0;object-fit:contain;image-rendering:pixelated; }
+.npc-name { flex:1 1 auto;min-width:0;text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
+@media (max-width:360px) { .npc-item { flex-basis:100%;max-width:100%; } }
+/* 出口按固定列对齐（对齐后和经典文字 MUD 的地图观感一致） */
+.exit-grid { display:flex;flex-wrap:wrap;margin:4px 0; }
+.exit-grid .text-link { flex:0 0 25%;text-align:left;white-space:nowrap; }
+@media (max-width:360px) { .exit-grid .text-link { flex-basis:33.33%; } }
+/* 任务页：系列切换与任务行都按列对齐 */
+.series-switch { margin:6px 0; }
+.series-switch summary { cursor:pointer;color:var(--muted);font-size:13px; }
+/* 折叠时彻底不渲染系列按钮：否则 content-visibility 会保留布局盒，被可访问性/遮挡检测误判 */
+details:not([open]) .series-grid { display:none; }
+.series-grid { display:flex;flex-wrap:wrap;gap:6px 12px;margin:6px 0;align-items:flex-start; }
+.series-item { display:flex;flex-direction:column;align-items:stretch;gap:1px;flex:1 1 calc(50% - 6px);max-width:calc(50% - 6px);min-width:0;text-align:left; }
+.series-item .series-name { flex:1 1 auto;min-width:0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;white-space:normal;line-height:1.25;overflow-wrap:anywhere; }
+.series-item .series-progress { flex:0 0 auto;align-self:flex-end;color:var(--muted);font-size:12px;white-space:nowrap; }
+@media (max-width:480px) {
+  .series-item { flex-basis:100%;max-width:100%;flex-direction:row;align-items:baseline;justify-content:space-between;gap:8px; }
+  .series-item .series-progress { align-self:auto; }
+}
+.series-item.is-active .series-name { font-weight:700; }
+.task-list { margin:6px 0 10px; }
+.task-row { display:flex;flex-wrap:wrap;align-items:baseline;padding:5px 0;border-bottom:1px dotted var(--rule); }
+.task-index { flex:0 0 1.6em;margin-right:8px;color:var(--muted);font-size:13px; }
+.task-name { flex:1 1 auto;text-align:left;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
+.task-status { flex:0 0 auto;margin-left:8px;font-size:13px;color:var(--muted);white-space:nowrap; }
+.task-status.status-available { color:#1d6b3a; }
+.task-status.status-accepted,.task-status.status-in_progress { color:#1d4f8a; }
+.task-status.status-completable { color:#a35b00;font-weight:700; }
+.task-status.status-completed { color:#888; }
+.task-travel { flex:0 0 100%;margin-left:calc(1.6em + 8px);font-size:13px; }
+/* 角色列表 / 市场行情：列对齐 */
+.character-list { list-style:none;padding:0;margin:4px 0; }
+.character-row { display:flex;align-items:baseline;padding:4px 0;border-bottom:1px dotted var(--rule); }
+.character-name { flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
+.character-level,.character-current { flex:0 0 auto;margin-left:10px;color:var(--muted);font-size:13px;white-space:nowrap; }
+.character-actions { display:flex;flex:0 0 auto;gap:8px;margin-left:10px;white-space:nowrap; }
+.trade-row { display:flex;align-items:baseline; }
+.trade-name { flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
+.trade-price { flex:0 0 auto;margin-left:10px;color:var(--muted);font-size:13px;white-space:nowrap; }
+.trade-actions { display:flex;flex:0 0 auto;gap:10px;margin-left:10px;white-space:nowrap; }
+/* 背包 / 商店：列对齐 */
+.bag-row { display:flex;align-items:center;padding:3px 0; }
+.bag-icon { flex:0 0 22px; }
+.bag-icon .item-icon { width:20px;height:20px;margin:0; }
+.bag-index { flex:0 0 1.4em;color:var(--muted);font-size:13px;text-align:right; }
+.bag-name { flex:1 1 auto;margin-left:6px;text-align:left;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
+.bag-qty { flex:0 0 auto;margin-left:8px;color:var(--muted);font-size:13px;white-space:nowrap; }
+.shop-row { display:flex;flex-wrap:wrap;align-items:center;padding:4px 0;border-bottom:1px dotted var(--rule); }
+.shop-icon { flex:0 0 22px; }
+.shop-icon .item-icon { width:20px;height:20px;margin:0; }
+.shop-name { flex:1 1 auto;min-width:0;margin-left:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
+.shop-price { flex:0 0 auto;margin-left:8px;color:var(--muted);font-size:13px;white-space:nowrap; }
+.shop-actions { display:flex;flex:0 0 auto;gap:6px;margin-left:8px;white-space:nowrap; }
+.shop-owned { color:var(--muted);font-size:13px; }
 .current-location { font-weight:800; }
 .message { margin:7px 0;padding:5px 0;border-top:1px dotted var(--rule);border-bottom:1px dotted var(--rule);white-space:pre-wrap; }
 .error { color:var(--error);white-space:pre-wrap; }
@@ -45,8 +118,12 @@ summary { cursor:pointer;font-weight:700; }
 .task-flow,.encounter-row,.voyage-row { margin:8px 0 12px; }
 .encounter-row p,.technical-note { overflow-wrap:anywhere;word-break:break-all;white-space:normal; }
 .task-flow + .task-flow { border-top:1px solid var(--rule);padding-top:8px; }
-.primary-nav { margin-top:14px;padding-top:7px;border-top:1px solid var(--rule);line-height:1.8; }
-.nav-link { white-space:nowrap; }
+.primary-nav { display:flex;flex-wrap:wrap;margin-top:14px;padding-top:8px;border-top:1px solid var(--rule);align-items:center; }
+.nav-link { display:flex;flex:0 0 20%;align-items:center;gap:4px;min-width:0;text-align:left;white-space:nowrap; }
+.nav-icon { display:inline-flex;flex:0 0 20px;width:20px;height:20px;align-items:center;justify-content:center; }
+.nav-icon .ui-icon,.nav-icon img { width:20px;height:20px;margin:0;object-fit:contain;image-rendering:pixelated; }
+.nav-label { overflow:hidden;text-overflow:ellipsis; }
+@media (max-width:400px) { .nav-link { flex-basis:25%; } }
 .technical-note,.evidence-note { color:var(--muted);font-size:13px;overflow-wrap:anywhere; }
 .system-footer { padding:7px 14px 12px;border-top:1px solid var(--rule);background:#fff;color:var(--muted);font-size:13px; }
 .system-footer p { margin:0; }
@@ -59,3 +136,8 @@ summary { cursor:pointer;font-weight:700; }
 @media (min-width:421px) {
   body { box-shadow:0 0 18px #00000012; }
 }
+
+/* button.text-link 的 display:inline 会盖掉组件自己的 flex 布局（特异性 0,1,1），这里显式提权 */
+button.series-item { display:flex; }
+button.nav-link { display:flex; }
+button.map-chip { display:flex; }

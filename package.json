@@ -60,7 +60,8 @@
     "e2e:manual": "node scripts/e2e-gameplay-test.js",
     "mainline:e2e": "node scripts/mainline-e2e.js",
     "smoke:public": "node scripts/smoke-public-release.js",
-    "verify:idle-assets": "node scripts/verify-idle-assets.js"
+    "verify:idle-assets": "node scripts/verify-idle-assets.js",
+    "ui:shots": "node scripts/ui-screenshot.js"
   },
   "engines": {
     "node": ">=22.5"

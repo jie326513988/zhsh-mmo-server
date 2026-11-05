@@ -635,6 +635,20 @@ class EquipmentRuntime {
       return { applied:true,action:'unequipped',equipment_canonical_id:itemId,slot,stats:effectiveStats(state,this.catalog) };
     });
   }
+  /** 回收装备：按原版零售价 lj 的 20% 折价出售。已装备的装备不在背包里，天然不会被卖掉。 */
+  sell(playerId,equipmentId,eventId) {
+    const item=this.catalog.getEquipment(equipmentId);
+    const data=item.attributes ?? item.normalized_data ?? item ?? {};
+    const base=Number(data.lj ?? data.price ?? item.price ?? 0);
+    return transactEvent(this.storage,playerId,eventId,'equipment_sell',{ equipment_canonical_id:equipmentId },this.clock,(state) => {
+      if ((state.inventory[equipmentId] ?? 0) < 1) throw new Error('背包里没有这件装备。');
+      const price=Math.max(1,Math.floor(base*0.2));
+      assertInventoryRemovalAllowed(state,equipmentId,1,{reason:'equipment_sell'});
+      setInventory(state,equipmentId,state.inventory[equipmentId]-1);
+      state.player.money+=price;
+      return { applied:true,action:'equipment_sold',equipment_canonical_id:equipmentId,display_name:item.display_name,unit_price:price,total:price,money:state.player.money };
+    });
+  }
 }
 
 class MarketRuntime {

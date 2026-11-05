@@ -45,5 +45,7 @@ test('player UI resolves families and references without exposing mapping statis
   assert.match(app,/binding_ids/);assert.match(app,/task_reference_ids/);assert.match(app,/visualForMaritimeEncounter/);
   for(const forbidden of ['已接入229','绑定118','未绑定111','权威美术图鉴','经典手机版等价复原','非像素级原版复刻','候选版素材展示'])assert.equal(app.includes(forbidden)||html.includes(forbidden),false,forbidden);
   assert.doesNotMatch(css,/object-fit:\s*cover/);assert.match(css,/object-fit:contain/);assert.match(css,/image-rendering:pixelated/);assert.match(css,/image-rendering:crisp-edges/);
-  assert.match(app,/debugEnabled\?'<button class="text-link nav-link" data-page="compendium"/);
+  assert.match(app,/nav-link" data-page="\$\{page\}"/);
+  assert.match(app,/\['compendium', '图像调试', null\]/);
+  assert.match(app,/\['admin', '超管', null\]/);
 });

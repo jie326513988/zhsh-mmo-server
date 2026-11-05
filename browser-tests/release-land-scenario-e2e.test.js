@@ -33,8 +33,7 @@ test('release DOM land scenario proves level-up, economy, equipment, NPC duel an
   try{
     scenario.stage='import audited 15.697 level-106 checkpoint';
     await scenario.openBrowser();await scenario.page.navigate(server.url);
-    await scenario.page.waitFor(()=>document.querySelector('[data-action="import-save"]'),{label:'land checkpoint import control'});
-    await scenario.page.chooseFile('[data-action="import-save"]',fixturePath);scenario.uiClicks+=1;await scenario.waitPage('location');
+    await scenario.importFixture(fixturePath);
     await scenario.page.waitFor(()=>document.querySelector('#save-status')?.textContent==='导入结果已保存',{label:'land checkpoint import completion'});
     scenario.currentNode=checkpoint.state.player.current_map_node_canonical_id;await scenario.measure('release_land_import');await scenario.selectSeries('task.series.15');
 

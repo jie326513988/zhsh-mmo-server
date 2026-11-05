@@ -28,8 +28,7 @@ test('incremental DOM: imported 57-task save executes source-driven training and
   const scenario=new DomGameplayScenario({root,url:server.url,scenario:'progression-incremental',legacyFixture:baseline,allowedTaskIds:accepted72TaskIds});const started=Date.now();
   try{
     scenario.startedAt=new Date().toISOString();scenario.stage='import accepted 57-task save';await scenario.openBrowser();await scenario.page.navigate(server.url);
-    await scenario.page.waitFor(()=>document.querySelector('[data-action="import-save"]'),{label:'formal save import control'});
-    await scenario.page.chooseFile('[data-action="import-save"]',fixturePath);scenario.uiClicks+=1;await scenario.waitPage('location');
+    await scenario.importFixture(fixturePath);
     scenario.currentNode=baseline.state.player.current_map_node_canonical_id;await scenario.measure('progression_incremental_import');
     const beforeIds=new Set(Object.entries(baseline.state.tasks).filter(([,entry])=>entry.status==='completed').map(([id])=>id));
     await scenario.selectSeries('task.series.05');for(const id of ['task.series.05.032','task.series.05.033','task.series.05.034','task.series.05.035'])await scenario.completeTask(scenario.taskById.get(id));

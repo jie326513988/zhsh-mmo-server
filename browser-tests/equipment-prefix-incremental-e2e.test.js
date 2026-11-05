@@ -31,8 +31,7 @@ test('incremental DOM imports the accepted 71-task fixture and naturally complet
   try{
     scenario.startedAt=new Date().toISOString();scenario.stage='import accepted 71-task save';
     await scenario.openBrowser();await scenario.page.navigate(server.url);
-    await scenario.page.waitFor(()=>document.querySelector('[data-action="import-save"]'),{label:'formal save import control'});
-    await scenario.page.chooseFile('[data-action="import-save"]',fixturePath);scenario.uiClicks+=1;await scenario.waitPage('location');
+    await scenario.importFixture(fixturePath);
     scenario.currentNode=baseline.state.player.current_map_node_canonical_id;
     const initialStatus=await scenario.readStatus();assert.equal(initialStatus.completed,71);assert.equal(initialStatus.total,72);
     const task=scenario.taskById.get(taskId);assert.ok(task);

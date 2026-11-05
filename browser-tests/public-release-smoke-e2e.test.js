@@ -23,7 +23,7 @@ test('public release core smoke: start, art, task item, shop, normal and boss co
   const checks=[];const started=Date.now();
   try{
     await scenario.openBrowser();await scenario.page.navigate(server.url);
-    await scenario.page.waitFor(()=>document.querySelector('[data-action="new-game"]'),{label:'new game control'});
+    await scenario.page.waitFor(()=>document.querySelector('[data-action="new-game"], [data-action="auth-register"]'),{label:'start page controls'});
     await scenario.page.waitFor(()=>{const image=document.querySelector('.start-art');return image?.complete&&image.naturalWidth>0;},{label:'authoritative start art'});checks.push('startup','authoritative_art');
 
     await scenario.createNewSave();assert.equal(await scenario.page.pageName(),'location');checks.push('new_game','main_ui');

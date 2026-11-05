@@ -254,6 +254,29 @@ function buildCityMapEntries(content,currentLocation,adjacentLocations) {
     .sort((left,right) => Number(right.is_current) - Number(left.is_current) || String(left.display_name).localeCompare(String(right.display_name),'zh-CN'));
 }
 
+// ---- 城内地图：还原原版 cities.grid 的空间排布（参考经典文字 MUD 的「城内地图/地图全景」） ----
+function cityGrid(cityCanonicalId) {
+  return (content.cities ?? []).find((entry) => entry.canonical_id === cityCanonicalId)?.grid ?? null;
+}
+/** grid 单元格里同一个地名会占多格，合并成矩形块。 */
+function buildCityBlocks(grid) {
+  const blocks = new Map();
+  if (!grid?.cells) return blocks;
+  grid.cells.forEach((row, rowIndex) => (row ?? []).forEach((name, colIndex) => {
+    if (!name) return;
+    const existing = blocks.get(name);
+    if (existing) {
+      existing.minRow = Math.min(existing.minRow, rowIndex);
+      existing.maxRow = Math.max(existing.maxRow, rowIndex);
+      existing.minCol = Math.min(existing.minCol, colIndex);
+      existing.maxCol = Math.max(existing.maxCol, colIndex);
+    } else {
+      blocks.set(name, { name, minRow: rowIndex, maxRow: rowIndex, minCol: colIndex, maxCol: colIndex });
+    }
+  }));
+  return blocks;
+}
+
 function renderLocationPage() {
   document.body.dataset.page = 'location';
   const view = serverView;
@@ -276,9 +299,9 @@ function renderLocationPage() {
     ${locationVisual?renderAsset(locationVisual,'scene-art'):''}
     ${renderFeedback()}
     <p>你看到：</p>
-    ${npcs.length ? `<div class="line-list">${npcs.map((npc) => `<p class="asset-row">${renderCanonicalVisual(npc.npc_canonical_id,'item-icon')}<button class="text-link" data-page="npc" data-npc-id="${attr(npc.npc_canonical_id)}" data-npc-name="${attr(npc.display_name)}">${escapeHtml(npc.display_name)}</button></p>`).join('')}</div>` : '<p>这里没有与当前任务有关的人物。</p>'}
+    ${npcs.length ? `<div class="npc-grid">${npcs.map((npc) => `<span class="npc-item"><span class="npc-icon">${renderCanonicalVisual(npc.npc_canonical_id,'item-icon')}</span><button class="text-link npc-name" data-page="npc" data-npc-id="${attr(npc.npc_canonical_id)}" data-npc-name="${attr(npc.display_name)}">${escapeHtml(npc.display_name)}</button></span>`).join('')}</div>` : '<p>这里没有与当前任务有关的人物。</p>'}
     <p>请选择出口：</p>
-    ${adjacent.length ? `<div class="inline-links">${adjacent.map((node) => `<button class="text-link" data-move="${attr(node.map_node_canonical_id)}">${escapeHtml(node.display_name)}</button>`).join(' ')}</div>` : '<p>这里没有可用出口。</p>'}
+    ${adjacent.length ? `<div class="exit-grid">${adjacent.map((node) => `<button class="text-link" data-move="${attr(node.map_node_canonical_id)}">${escapeHtml(node.display_name)}</button>`).join('')}</div>` : '<p>这里没有可用出口。</p>'}
     <p>【<button class="text-link" data-page="map">城内地图</button>】${locationName==='码头'?'　【<button class="text-link" data-page="world">世界地图</button>】':''}</p>
     <p>${escapeHtml(view.current_location?.description ?? '')}</p>
     ${encounterActions.length ? '<p>【<button class="text-link" data-page="encounter" data-encounter-kind="location">此处行动</button>】</p>' : ''}
@@ -296,21 +319,90 @@ function renderMapPage() {
   document.body.dataset.page = 'map';
   const view = serverView;
   const adjacent = engine.listAdjacentLocations(PLAYER_ID);
-  const mapEntries = buildCityMapEntries(content,view.current_location,adjacent);
-  const cityName = cityDisplayName(view.current_location?.city_canonical_id);
+  const cityId = view.current_location?.city_canonical_id;
+  const cityName = cityDisplayName(cityId);
+  const allBlocks = buildCityBlocks(cityGrid(cityId));
+  const entries = buildCityMapEntries(content, view.current_location, adjacent);
+  const entryByName = new Map(entries.map((entry) => [entry.display_name, entry]));
+  const currentName = view.current_location?.display_name;
+  const currentBlock = allBlocks.get(currentName) ?? null;
+  const scope = (page.scope === 'full' || !currentBlock) ? 'full' : 'local';
+  let blocks = allBlocks;
+  if (scope === 'local') {
+    // 以当前位置为中心截一个 9×7 的窗口：手机上一屏能看全，不再是一条空白 + 横向滚动
+    const centerRow = (currentBlock.minRow + currentBlock.maxRow) / 2;
+    const centerCol = (currentBlock.minCol + currentBlock.maxCol) / 2;
+    blocks = new Map([...allBlocks].filter(([, block]) => {
+      const row = (block.minRow + block.maxRow) / 2;
+      const col = (block.minCol + block.maxCol) / 2;
+      return Math.abs(row - centerRow) <= 4 && Math.abs(col - centerCol) <= 3;
+    }));
+  }
+  const rowBands = [...new Set([...blocks.values()].flatMap((block) => [block.minRow, block.maxRow]))].sort((a, b) => a - b);
+  const colBands = [...new Set([...blocks.values()].flatMap((block) => [block.minCol, block.maxCol]))].sort((a, b) => a - b);
+  const rowBand = new Map(rowBands.map((value, index) => [value, index]));
+  const colBand = new Map(colBands.map((value, index) => [value, index]));
+  const chipFor = (block) => {
+    const entry = entryByName.get(block.name);
+    const isCurrent = Boolean(entry?.is_current) || block.name === currentName;
+    const canMove = Boolean(entry?.can_move);
+    const className = `map-chip${isCurrent ? ' is-current' : ''}${canMove ? ' is-adjacent' : ''}`;
+    if (isCurrent) return `<span class="${className}">★ ${escapeHtml(block.name)}</span>`;
+    if (canMove) return `<button class="text-link ${className}" data-move="${attr(entry.map_node_canonical_id)}">${escapeHtml(block.name)}</button>`;
+    return `<span class="${className}">${escapeHtml(block.name)}</span>`;
+  };
+  const gridCells = Array.from({ length: rowBands.length }, () => Array(colBands.length).fill(null));
+  const gridSkip = Array.from({ length: rowBands.length }, () => Array(colBands.length).fill(false));
+  for (const block of blocks.values()) {
+    const r1 = rowBand.get(block.minRow); const r2 = rowBand.get(block.maxRow);
+    const c1 = colBand.get(block.minCol); const c2 = colBand.get(block.maxCol);
+    gridCells[r1][c1] = { block, rowSpan: r2 - r1 + 1, colSpan: c2 - c1 + 1 };
+    for (let r = r1; r <= r2; r += 1) for (let c = c1; c <= c2; c += 1) gridSkip[r][c] = true;
+  }
+  const mapRows = [];
+  for (let r = 0; r < rowBands.length; r += 1) {
+    let cells = '';
+    for (let c = 0; c < colBands.length; c += 1) {
+      const cell = gridCells[r][c];
+      if (cell) cells += `<td rowspan="${cell.rowSpan}" colspan="${cell.colSpan}">${chipFor(cell.block)}</td>`;
+      else if (!gridSkip[r][c]) cells += '<td></td>';
+    }
+    mapRows.push(`<tr>${cells}</tr>`);
+  }
+  const mapTable = `<table class="city-map-table"><tbody>${mapRows.join('')}</tbody></table>`;
+  const offGrid = entries.filter((entry) => !allBlocks.has(entry.display_name));
+  // 全城视图按参考站的「地图全景」做法：4 列对齐的地名表格，而不是把整张网格塞进手机屏
+  const orderedBlocks = [...allBlocks.values()].sort((a, b) => a.minRow - b.minRow || a.minCol - b.minCol);
+  const fullItem = (block) => {
+    const entry = entryByName.get(block.name);
+    const isCurrent = Boolean(entry?.is_current) || block.name === currentName;
+    const canMove = Boolean(entry?.can_move);
+    const className = `city-map-item${isCurrent ? ' is-current' : ''}`;
+    if (isCurrent) return `<span class="${className}">★ ${escapeHtml(block.name)}</span>`;
+    if (canMove) return `<button class="text-link ${className}" data-move="${attr(entry.map_node_canonical_id)}">${escapeHtml(block.name)}</button>`;
+    return `<span class="${className}">${escapeHtml(block.name)}</span>`;
+  };
+  const fullRows = [];
+  for (let index = 0; index < orderedBlocks.length; index += 4) {
+    fullRows.push(`<tr>${orderedBlocks.slice(index, index + 4).map((block) => `<td>${fullItem(block)}</td>`).join('')}</tr>`);
+  }
+  const fullTable = `<table class="city-map-table is-list"><tbody>${fullRows.join('')}</tbody></table>`;
   app.innerHTML = `<section class="wap-page">
-    <p><strong>${escapeHtml(cityName)}城内地图：</strong></p>
+    <p><strong>【${escapeHtml(cityName)}·城内地图】</strong></p>
     ${renderFeedback()}
-    <div class="map-overview">${mapEntries.map((entry) => entry.is_current
-      ? `<p><strong>★ ${escapeHtml(entry.display_name)}（当前位置）</strong></p>`
-      : entry.can_move
-        ? `<p>→ <button class="text-link" data-move="${attr(entry.map_node_canonical_id)}">${escapeHtml(entry.display_name)}</button></p>`
-        : `<p>· ${escapeHtml(entry.display_name)}</p>`).join('')}</div>
-    <p>带箭头的地点可以直接前往。</p>
+    <p class="map-hint">★ 当前位置　蓝色地点可直接前往　显示：${scope === 'full' ? '全城' : '附近'}（${scope === 'full' ? allBlocks.size : blocks.size}/${allBlocks.size} 块）</p>
+    <p class="map-scope"><button class="text-link" data-map-scope="local"${scope === 'local' ? ' disabled' : ''}>附近</button>　<button class="text-link" data-map-scope="full"${scope === 'full' ? ' disabled' : ''}>全城</button></p>
+    ${scope === 'full'
+      ? (allBlocks.size ? fullTable : '<p>这个港口还没有城内地图数据。</p>')
+      : (blocks.size ? mapTable : '<p>这个港口还没有城内地图数据。</p>')}
+    <p>请选择路口：</p>
+    ${adjacent.length ? `<div class="exit-grid map-exits">${adjacent.map((node) => `<button class="text-link" data-move="${attr(node.map_node_canonical_id)}">${escapeHtml(node.display_name)}</button>`).join('')}</div>` : '<p>这里没有可用出口。</p>'}
+    ${offGrid.length ? `<p class="map-offgrid">其他地点：${offGrid.map((entry) => entry.is_current ? `<strong>★ ${escapeHtml(entry.display_name)}</strong>` : entry.can_move ? `<button class="text-link" data-move="${attr(entry.map_node_canonical_id)}">${escapeHtml(entry.display_name)}</button>` : `<span>${escapeHtml(entry.display_name)}</span>`).join(' · ')}</p>` : ''}
     <p><button class="text-link" data-page="location">返回</button></p>
     ${renderPrimaryNav()}
   </section>`;
   bindPageActions();
+  document.querySelectorAll('[data-map-scope]').forEach((button) => button.addEventListener('click', () => showPage('map', { scope: button.dataset.mapScope })));
 }
 
 function renderWorldPage() {
@@ -356,9 +448,9 @@ function renderMarketPage() {
     const remote=mv.offers.filter((o)=>!o.is_local);
     holds.innerHTML=`<p>你所在区域：${escapeHtml(mv.city_region_name || mv.city_region || '未知')}　货舱：${mv.cargo_holds ?? mv.holds ?? 0}/${mv.cargo_capacity ?? mv.capacity ?? 100}</p>
       <p><strong>本区特产（低价买入）</strong></p>
-      <div class="line-list">${local.slice(0,12).map((o)=>`<p>${escapeHtml(o.name)}（${o.local_price}铜）　<button class="text-link" data-market-buy="${attr(o.canonical_id)}" data-name="${attr(o.name)}">买入</button>　<button class="text-link" data-market-sell="${attr(o.canonical_id)}" data-name="${attr(o.name)}">卖出</button></p>`).join('')}</div>
+      <div class="line-list">${local.slice(0,12).map((o)=>`<p class="trade-row"><span class="trade-name">${escapeHtml(o.name)}</span><span class="trade-price">${o.local_price}铜</span><span class="trade-actions"><button class="text-link" data-market-buy="${attr(o.canonical_id)}" data-name="${attr(o.name)}">买入</button><button class="text-link" data-market-sell="${attr(o.canonical_id)}" data-name="${attr(o.name)}">卖出</button></span></p>`).join('')}</div>
       <p><strong>异区商品（高价卖出）</strong></p>
-      <div class="line-list">${remote.slice(0,12).map((o)=>`<p>${escapeHtml(o.name)}（${o.local_price}铜）　<button class="text-link" data-market-buy="${attr(o.canonical_id)}" data-name="${attr(o.name)}">买入</button>　<button class="text-link" data-market-sell="${attr(o.canonical_id)}" data-name="${attr(o.name)}">卖出</button></p>`).join('')}</div>`;
+      <div class="line-list">${remote.slice(0,12).map((o)=>`<p class="trade-row"><span class="trade-name">${escapeHtml(o.name)}</span><span class="trade-price">${o.local_price}铜</span><span class="trade-actions"><button class="text-link" data-market-buy="${attr(o.canonical_id)}" data-name="${attr(o.name)}">买入</button><button class="text-link" data-market-sell="${attr(o.canonical_id)}" data-name="${attr(o.name)}">卖出</button></span></p>`).join('')}</div>`;
     bindMarketActions();
   }).catch((e)=>{ feedback.fail(e.message); renderMarketPage(); });
 }
@@ -574,12 +666,27 @@ function renderTaskListPage() {
   const view = serverView;
   const visible = view.task_chain.filter((entry) => entry.runtime.status !== 'locked');
   const activeSeries=content.series.find((entry)=>entry.canonical_id===view.active_series_canonical_id);
+  const activeStats=(view.task_series??[]).find((entry)=>entry.canonical_id===view.active_series_canonical_id);
+  const statusClass=(status)=>`task-status status-${String(status||'unknown')}`;
   app.innerHTML = `<section class="wap-page">
     <p><strong>${renderUiIcon('任务日志')}任务</strong></p>
     ${renderFeedback()}
-    <p>当前系列：${escapeHtml(activeSeries?.display_name??view.active_series_canonical_id)}</p>
-    ${adminEnabled ? `<p>${view.task_series.map((series)=>`<button class="text-link" data-series-select="${attr(series.canonical_id)}">${escapeHtml(content.series.find((entry)=>entry.canonical_id===series.canonical_id)?.display_name??series.canonical_id)} ${series.completed}/${series.total}</button>`).join(' · ')}</p>` : ''}
-    ${visible.map((entry,index) => `<p class="asset-row">${renderTaskTargetVisual(entry.definition,'item-icon')}${index + 1}. <button class="text-link" data-page="task" data-task-id="${attr(entry.definition.canonical_id)}">${escapeHtml(entry.definition.display_name)}</button>　${statusLabel(entry.runtime.status)}　${renderFastTravel(entry,view)}</p>`).join('') || '<p>当前没有任务。</p>'}
+    <p>当前系列：<strong>${escapeHtml(activeSeries?.display_name??view.active_series_canonical_id)}</strong>${activeStats?`　已完成 ${activeStats.completed}/${activeStats.total}`:''}</p>
+    <details class="series-switch"><summary>切换任务系列（${view.task_series.length}）</summary>
+      <div class="series-grid">${view.task_series.map((series)=>{
+        const name=content.series.find((entry)=>entry.canonical_id===series.canonical_id)?.display_name??series.canonical_id;
+        const isActive=series.canonical_id===view.active_series_canonical_id;
+        return `<button class="text-link series-item${isActive?' is-active':''}" data-series-select="${attr(series.canonical_id)}"><span class="series-name">${escapeHtml(name)}</span><span class="series-progress">${series.completed}/${series.total}</span></button>`;
+      }).join('')}</div></details>
+    <div class="task-list">${visible.map((entry,index) => {
+      const travel=renderFastTravel(entry,view);
+      return `<div class="task-row">
+        <span class="task-index">${index + 1}</span>
+        <button class="text-link task-name" data-page="task" data-task-id="${attr(entry.definition.canonical_id)}">${escapeHtml(entry.definition.display_name)}</button>
+        <span class="${statusClass(entry.runtime.status)}">${escapeHtml(statusLabel(entry.runtime.status))}</span>
+        ${travel?`<span class="task-travel">${travel}</span>`:''}
+      </div>`;
+    }).join('') || '<p>当前没有任务。</p>'}</div>
     <p><button class="text-link" data-page="location">返回</button></p>
     ${renderPrimaryNav()}
   </section>`;
@@ -626,7 +733,7 @@ function renderBackpackPage() {
     <p>铜贝：${view.player.money}</p>
     <p>经验：${view.player.experience}</p>
     <p>背包：${inventory.reduce((sum,[,quantity]) => sum + quantity,0)}/${view.inventory_capacity}</p>
-    ${inventory.length ? groups.filter(([,entries])=>entries.length).map(([label,entries])=>`<p>【${label}】</p>${entries.map(([id,quantity],index)=>`<p class="asset-row">${renderCanonicalVisual(id,'item-icon')}${index+1}. <button class="text-link" data-page="item" data-item-id="${attr(id)}">${escapeHtml(entityName(id))}</button> *${quantity}</p>`).join('')}`).join('') : '<p>背包为空。</p>'}
+    ${inventory.length ? groups.filter(([,entries])=>entries.length).map(([label,entries])=>`<p>【${label}】</p>${entries.map(([id,quantity],index)=>`<p class="bag-row"><span class="bag-icon">${renderCanonicalVisual(id,'item-icon')}</span><span class="bag-index">${index+1}</span><button class="text-link bag-name" data-page="item" data-item-id="${attr(id)}">${escapeHtml(entityName(id))}</button><span class="bag-qty">×${quantity}</span></p>`).join('')}`).join('') : '<p>背包为空。</p>'}
     <p><button class="text-link" data-page="location">返回</button></p>
     ${renderPrimaryNav()}
   </section>`;
@@ -705,8 +812,14 @@ function renderCookPage() {
 function renderFormalShopPage() {
   document.body.dataset.page='shop';const view=serverView;
   const entries=content.shop_entries.filter((entry)=>entry.map_node_canonical_id===view.player.current_map_node_canonical_id);
+  const equipmentById=new Map((content.equipment??[]).map((entry)=>[entry.canonical_id,entry]));
+  const recyclePrice=(equipment)=>Math.max(1,Math.floor(Number(equipment.lj??equipment.attributes?.lj??equipment.price??0)*0.2));
+  const recyclable=Object.entries(view.inventory).map(([id,quantity])=>({ id,quantity,equipment:equipmentById.get(id) }))
+    .filter((entry)=>entry.equipment&&entry.quantity>0);
   app.innerHTML=`<section class="wap-page"><p><strong>${renderUiIcon('商店交易')}商店</strong></p>${renderFeedback()}<p>铜币：${view.player.money}</p>
-    ${entries.length ? entries.map((entry)=>{const itemId=entry.task_item_canonical_id??entry.content_entity_canonical_id;const owned=view.inventory[itemId]??0;return `<p class="asset-row">${renderCanonicalVisual(itemId,'item-icon')}${escapeHtml(entry.display_name)}　${entry.price}铜　<button class="text-link" data-shop-buy="${attr(entry.canonical_id)}">购买</button>${owned?`　持有${owned}　<button class="text-link" data-shop-sell="${attr(entry.canonical_id)}">出售（${Math.max(1,Math.floor(entry.price*0.2))}铜）</button>`:''}</p>`;}).join('') : '<p>当前位置没有可购买商品。</p>'}
+    ${entries.length ? entries.map((entry)=>{const itemId=entry.task_item_canonical_id??entry.content_entity_canonical_id;const owned=view.inventory[itemId]??0;return `<p class="shop-row"><span class="shop-icon">${renderCanonicalVisual(itemId,'item-icon')}</span><span class="shop-name">${escapeHtml(entry.display_name)}</span><span class="shop-price">${entry.price}铜</span><span class="shop-actions"><button class="text-link" data-shop-buy="${attr(entry.canonical_id)}">购买</button>${owned?`<span class="shop-owned">持有${owned}</span><button class="text-link" data-shop-sell="${attr(entry.canonical_id)}">出售（${Math.max(1,Math.floor(entry.price*0.2))}铜）</button>`:''}</span></p>`;}).join('') : '<p>当前位置没有可购买商品。</p>'}
+    <p>【回收装备】</p>
+    ${recyclable.length ? recyclable.map(({ id,quantity,equipment })=>`<p class="shop-row"><span class="shop-icon">${renderCanonicalVisual(id,'item-icon')}</span><span class="shop-name">${escapeHtml(equipment.display_name)}（×${quantity}）</span><span class="shop-price">${recyclePrice(equipment)}铜</span><span class="shop-actions"><button class="text-link" data-equipment-sell="${attr(id)}">出售</button></span></p>`).join('') : '<p>背包里没有可回收的装备（打怪掉的装备会先进入背包）。</p>'}
     <p>背包：${Object.values(view.inventory).reduce((sum,n)=>sum+n,0)}/${view.inventory_capacity}</p><p><button class="text-link" data-page="location">返回</button></p>${renderPrimaryNav()}</section>`;
   bindPageActions();bindFormalPageActions();
 }
@@ -820,7 +933,7 @@ function renderSettingsPage() {
       ${players.length ? `<ul class="character-list">${players.map(({ playerId,state }) => {
         const { name,level } = characterLabel(playerId,state);
         const active = playerId === PLAYER_ID;
-        return `<li>${active?'<strong>':''}${escapeHtml(name)}${active?'</strong>':''}（Lv.${level}）　${!active?`<button class="text-link" data-character-select="${attr(playerId)}">切换</button>`:'<span>当前</span>'}　<button class="text-link danger-link" data-character-delete="${attr(playerId)}">删除</button></li>`;
+        return `<li class="character-row${active?' is-active':''}"><span class="character-name">${escapeHtml(name)}</span><span class="character-level">Lv.${level}</span><span class="character-actions">${!active?`<button class="text-link" data-character-select="${attr(playerId)}">切换</button>`:'<span class="character-current">当前</span>'}<button class="text-link danger-link" data-character-delete="${attr(playerId)}">删除</button></span></li>`;
       }).join('')}</ul>` : '<p>还没有角色存档。</p>'}
       <p><input id="new-character-name" type="text" maxlength="20" placeholder="角色名，例如：孙悟空">　<button class="text-link" data-action="new-character">创建新角色</button></p>
     </details>
@@ -849,8 +962,10 @@ async function loadAiStatus() {
       : (s.successRate == null ? '—' : `${s.successRate}% 成功（${s.ok}/${s.calls}）`);
     box.innerHTML = `<p>模式：<strong>${escapeHtml(mode)}</strong></p>
       <p>服务：${escapeHtml(String(s.base ?? ''))}</p>
-      <p>主模型：${escapeHtml(String(s.models?.light ?? ''))}　快模型：${escapeHtml(String(s.models?.fast ?? ''))}</p>
-      <p>调用：${escapeHtml(health)}　最近延迟：${s.lastLatencyMs == null ? '—' : `${s.lastLatencyMs} ms`}</p>
+      <p>主模型：${escapeHtml(String(s.models?.light ?? ''))}</p>
+      <p>快模型：${escapeHtml(String(s.models?.fast ?? ''))}</p>
+      <p>调用：${escapeHtml(health)}</p>
+      <p>最近延迟：${s.lastLatencyMs == null ? '—' : `${s.lastLatencyMs} ms`}</p>
       ${s.lastError ? `<p>最近错误：${escapeHtml(String(s.lastError))}</p>` : ''}
       ${s.aiPlayers?.length ? `<p>AI 玩家：${escapeHtml(s.aiPlayers.join('、'))}</p>` : ''}`;
   } catch (error) {
@@ -928,22 +1043,16 @@ function renderAdminPage() {
 }
 
 function renderPrimaryNav() {
-  return `<nav class="primary-nav" aria-label="游戏功能">
-    <button class="text-link nav-link" data-page="status">${renderUiIcon('角色状态')}状态</button> ·
-    <button class="text-link nav-link" data-page="backpack">${renderUiIcon('背包')}物品</button> ·
-    <button class="text-link nav-link" data-page="tasks">${renderUiIcon('任务日志')}任务</button> ·
-    <button class="text-link nav-link" data-page="market">${renderUiIcon('市场交易')}市场</button> ·
-    <button class="text-link nav-link" data-page="pets">${renderUiIcon('宠物')}宠物</button> ·
-    <button class="text-link nav-link" data-page="enhance">${renderUiIcon('强化')}强化</button> ·
-    <button class="text-link nav-link" data-page="regions">${renderUiIcon('世界地图')}天下</button> ·
-    <button class="text-link nav-link" data-page="discoveries">${renderUiIcon('发现物')}发现物</button> ·
-    <button class="text-link nav-link" data-page="questline">${renderUiIcon('主线')}主线</button> ·
-    <button class="text-link nav-link" data-page="voyage">${renderUiIcon('航海')}航行</button> ·
-    ${debugEnabled?'<button class="text-link nav-link" data-page="compendium">图像调试</button> ·':''}
-    ${adminEnabled?'<button class="text-link nav-link" data-page="admin">超管</button> ·':''}
-    <button class="text-link" data-page="save">存档</button> ·
-    <button class="text-link" data-page="settings">设置</button>
-  </nav>`;
+  const items = [
+    ['status', '状态', '角色状态'], ['backpack', '物品', '背包'], ['tasks', '任务', '任务日志'],
+    ['market', '市场', '市场交易'], ['pets', '宠物', '宠物'], ['enhance', '强化', '强化'],
+    ['regions', '天下', '世界地图'], ['discoveries', '发现物', '发现物'], ['questline', '主线', '主线'],
+    ['voyage', '航行', '航海'], ['save', '存档', null], ['settings', '设置', null],
+  ];
+  if (debugEnabled) items.splice(10, 0, ['compendium', '图像调试', null]);
+  if (adminEnabled) items.splice(items.length - 2, 0, ['admin', '超管', null]);
+  return `<nav class="primary-nav" aria-label="游戏功能">${items.map(([page, label, icon]) =>
+    `<button class="text-link nav-link" data-page="${page}"><span class="nav-icon">${icon ? renderUiIcon(icon) : ''}</span><span class="nav-label">${label}</span></button>`).join('')}</nav>`;
 }
 
 function renderFeedback() {
@@ -995,6 +1104,8 @@ function bindFormalPageActions() {
     ()=>economy.buy(PLAYER_ID,button.dataset.shopBuy,1,eventId('shop-buy')),'购买成功。','shop')));
   document.querySelectorAll('[data-shop-sell]').forEach((button)=>button.addEventListener('click',()=>perform(
     ()=>economy.sell(PLAYER_ID,button.dataset.shopSell,1,eventId('shop-sell')),'出售成功。','shop')));
+  document.querySelectorAll('[data-equipment-sell]').forEach((button)=>button.addEventListener('click',()=>perform(
+    ()=>equipment.sell(PLAYER_ID,button.dataset.equipmentSell,eventId('equipment-sell')),'装备已出售。','shop')));
   document.querySelectorAll('[data-use-item]').forEach((button)=>button.addEventListener('click',()=>perform(
     ()=>items.use(PLAYER_ID,button.dataset.useItem,eventId('item-use')),'物品已经使用。','backpack')));
   document.querySelectorAll('[data-equip-item]').forEach((button)=>button.addEventListener('click',()=>perform(

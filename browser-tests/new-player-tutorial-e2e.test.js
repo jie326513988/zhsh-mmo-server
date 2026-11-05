@@ -30,7 +30,7 @@ test('new-player tutorial: fresh save plays and completes the 威尼斯新手成
   try{
     await scenario.openBrowser();
     await scenario.page.navigate(server.url);
-    await scenario.page.waitFor(()=>document.querySelector('[data-action="new-game"]'),{label:'new game control'});
+    await scenario.page.waitFor(()=>document.querySelector('[data-action="new-game"], [data-action="auth-register"]'),{label:'start page controls'});
     await scenario.createNewSave();
     assert.equal(await scenario.page.pageName(),'location','a fresh new game must land on the game location view, not the admin console');
 
