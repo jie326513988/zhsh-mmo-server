@@ -255391,6 +255391,17 @@
       }
     },
     {
+      "canonical_id": "entity.item.3855a868ca7393f3",
+      "source_canonical_id": "entity.item.3855a868ca7393f3",
+      "entity_category": "item",
+      "display_name": "狮子奶",
+      "normalized_data": {
+        "catalog": "allItems",
+        "name": "狮子奶",
+        "price": 1000
+      }
+    },
+    {
       "canonical_id": "entity.item.3efc0d87f78ee263",
       "source_canonical_id": "entity.item.3efc0d87f78ee263",
       "entity_category": "item",
@@ -255579,6 +255590,17 @@
       }
     },
     {
+      "canonical_id": "entity.item.5d65016bfdaff92d",
+      "source_canonical_id": "entity.item.5d65016bfdaff92d",
+      "entity_category": "item",
+      "display_name": "肉夹馍",
+      "normalized_data": {
+        "catalog": "allItems",
+        "name": "肉夹馍",
+        "price": 2500
+      }
+    },
+    {
       "canonical_id": "entity.item.5ee8bc9d7bd62050",
       "source_canonical_id": "entity.item.5ee8bc9d7bd62050",
       "entity_category": "item",
@@ -255738,6 +255760,17 @@
         "catalog": "taskItems",
         "name": "无根之水",
         "value": 1
+      }
+    },
+    {
+      "canonical_id": "entity.item.86912d08adaae017",
+      "source_canonical_id": "entity.item.86912d08adaae017",
+      "entity_category": "item",
+      "display_name": "朗姆酒",
+      "normalized_data": {
+        "catalog": "allItems",
+        "name": "朗姆酒",
+        "price": 200
       }
     },
     {
@@ -256244,6 +256277,17 @@
         "rarity": "common",
         "tip": "洄游上溯的冷水鱼，肉质肥厚，煮熟后泛着淡粉。",
         "type": 13
+      }
+    },
+    {
+      "canonical_id": "entity.item.e35e9fb1217e0f86",
+      "source_canonical_id": "entity.item.e35e9fb1217e0f86",
+      "entity_category": "item",
+      "display_name": "香料",
+      "normalized_data": {
+        "catalog": "allItems",
+        "name": "香料",
+        "price": 1000
       }
     },
     {
@@ -293926,7 +293970,7 @@
     "preview_routes_supported": false,
     "normal_runtime_reads_this_section": false
   },
-  "content_sha256": "e2c75489db8775aba95787826d444609c6570cf8950f7884e9877a64a974da45",
+  "content_sha256": "fe3fbf2df0ed8ff605eb850659427a4c29fb6014cd72120098fadb0e6138e676",
   "entity_counts": {
     "tasks": 651,
     "cities": 28,
@@ -293937,7 +293981,7 @@
     "npc_placements": 359,
     "monsters": 261,
     "monster_placements": 276,
-    "content_entities": 283,
+    "content_entities": 287,
     "item_sources": 151,
     "ships": 21,
     "voyage_routes": 702,

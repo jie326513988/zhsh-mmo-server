@@ -790,7 +790,9 @@ function renderCookPage() {
   const itemName=(id)=>(content.content_entities??[]).find((ce)=>ce.canonical_id===id)?.display_name??id;
   const buffText=(buff)=>buff?[['攻击',buff.attack],['防御',buff.defense],['体力',buff.max_health],['敏捷',buff.agility]].filter(([,v])=>Number(v)).map(([name,v])=>`${name}+${v}`).join(' ')+` · ${Number(buff.battles??3)}场`:'';
   const cityRecipes=(content.recipes??[]).filter((r)=>r.port_city_canonical_id===cityId);
-  const known=cityRecipes.filter((r)=>learned.has(r.canonical_id));
+  // 已学会的配方在任何港口都能做（原产港只作为出处展示）；未学会只提示本港的
+  const known=(content.recipes??[]).filter((r)=>learned.has(r.canonical_id))
+    .sort((a,b)=>(a.port_city_canonical_id===cityId?0:1)-(b.port_city_canonical_id===cityId?0:1)||Number(a.tier??1)-Number(b.tier??1));
   const unknown=cityRecipes.filter((r)=>!learned.has(r.canonical_id));
   app.innerHTML=`<section class="wap-page"><p><strong>${renderUiIcon('烹饪')}烹饪台</strong></p>${renderFeedback()}
     <p>铜币：${view.player.money}　厨艺：Lv.${Number(cooking.level)||1}（${Number(cooking.exp)||0}/${Number(cooking.next)||60}）　已学 ${learned.size}/${(content.recipes??[]).length} 道</p>
@@ -801,10 +803,11 @@ function renderCookPage() {
       const levelOk=Number(cooking.level)>=required;
       const meal=(content.content_entities??[]).find((ce)=>ce.canonical_id===recipe.result_item_canonical_id);
       const buff=buffText(meal?.normalized_data?.buff);
-      return `<section class="asset-row"><p>${meal?renderCanonicalVisual(meal.canonical_id,'item-icon'):''}<strong>${escapeHtml(recipe.display_name)}</strong>${buff?` · ${escapeHtml(buff)}`:''}</p>
-        <p>${cargo}　费用 ${Number(recipe.silver_cost??0)} 铜${levelOk?'':`　<strong class="error">需要厨艺 Lv.${required}</strong>`}</p>
+      const origin=recipe.port_city_canonical_id&&recipe.port_city_canonical_id!==cityId?`<span class="cook-origin">（原产：${escapeHtml(cityDisplayName(recipe.port_city_canonical_id))}）</span>`:'';
+      return `<section class="asset-row"><p>${meal?renderCanonicalVisual(meal.canonical_id,'item-icon'):''}<strong>${escapeHtml(recipe.display_name)}</strong>${origin}${buff?` · ${escapeHtml(buff)}`:''}</p>
+        <p>${cargo}　费用 ${Number(recipe.silver_cost??0)} 铜${levelOk?'':`　<strong class="error">需要厨艺 Lv.${required}</strong>`}${(levelOk&&!affordable)?'　<span class="error">食材不足</span>':''}</p>
         <p><button class="text-link" data-cook="${attr(recipe.canonical_id)}" ${(affordable&&levelOk)?'':'disabled'}>烹制</button></p></section>`;
-    }).join('') : '<p>本港还没有学会的配方。去打怪或做任务找找「食谱」吧。</p>'}
+    }).join('') : '<p>还没有学会任何配方。去打怪或做任务找找「食谱」吧。</p>'}
     ${unknown.length?`<details><summary>本港未学会（${unknown.length} 道）</summary>${unknown.map((r)=>`<p>？？？ · 第 ${Number(r.tier??1)} 档${Number(r.required_cooking_level??1)>1?` · 需厨艺 Lv.${Number(r.required_cooking_level)}`:''}</p>`).join('')}</details>`:''}
     <p><button class="text-link" data-page="location">返回</button></p>${renderPrimaryNav()}</section>`;
   bindPageActions();bindFormalPageActions();

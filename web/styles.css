@@ -112,6 +112,7 @@ details:not([open]) .series-grid { display:none; }
 .shop-actions { display:flex;flex:0 0 auto;gap:6px;margin-left:8px;white-space:nowrap; }
 .shop-owned { color:var(--muted);font-size:13px; }
 .current-location { font-weight:800; }
+.cook-origin { color:var(--muted);font-size:13px; }
 .message { margin:7px 0;padding:5px 0;border-top:1px dotted var(--rule);border-bottom:1px dotted var(--rule);white-space:pre-wrap; }
 .error { color:var(--error);white-space:pre-wrap; }
 .progress-text { color:var(--visited); }

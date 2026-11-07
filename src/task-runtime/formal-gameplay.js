@@ -261,7 +261,8 @@ class CookRuntime {
   constructor({ storage,catalog,taskEngine=null,clock=isoNow }) {
     this.storage=storage;this.catalog=catalog;this.taskEngine=taskEngine;this.clock=clock;
   }
-  // 在当前城市港口按配方烹制餐食：扣素材 + 计费 + 产出餐食物品，并累积厨艺熟练度
+  // 按已学配方烹制餐食：扣素材 + 计费 + 产出餐食物品，并累积厨艺熟练度。
+  // 配方只在学习时与港口绑定（出处），学会后在任何港口都能做。
   cook(playerId,recipeId,eventId) {
     return transactEvent(this.storage,playerId,eventId,'recipe_cook',{ recipe_canonical_id:recipeId },this.clock,(state) => {
       const recipe=this.catalog.getRecipe(recipeId);
@@ -269,8 +270,6 @@ class CookRuntime {
       if(!cooking.learned.includes(recipeId))throw new Error('还没学会这道菜，先找到它的食谱。');
       const required=Number(recipe.required_cooking_level??1)||1;
       if(Number(cooking.level)<required)throw new Error(`厨艺等级不足：「${recipe.display_name}」需要 Lv.${required}，当前 Lv.${cooking.level}。`);
-      const city=this.currentCityId(state);
-      if(recipe.port_city_canonical_id!==city)throw new Error(`该配方须在对应港口烹制（${recipe.port_city_canonical_id}）。`);
       if(Number(state.player.money)<Number(recipe.silver_cost??0))throw new Error('铜贝不足，无法支付烹制费用。');
       for(const [ingredientId,quantity] of Object.entries(recipe.cargo??{})) {
         if(Number(state.inventory[ingredientId]??0)<Number(quantity))throw new Error('食材不足，无法烹制。');

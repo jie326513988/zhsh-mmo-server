@@ -180,6 +180,9 @@ function exportTask1Content({ databasePath = defaultDatabase,outputPath = defaul
     const monsterPlacements=dedupeByCanonical([...databaseMonsterPlacements,...taskScopedMonsterPlacements]);
 
     const maritimeEntities=resolveMaritimeEntities(db,maritimeCapabilities);
+    // 烹饪扩展层的食材/成品也要进内容包（它们不在源库 recipes 表里）
+    const cooking = loadCookingContent();
+    const cookingItemIds = cooking ? cooking.recipes.flatMap((recipe) => [...Object.keys(recipe.cargo ?? {}), recipe.result_item_canonical_id]).filter(Boolean) : [];
     // 烹饪配方引用的食材与成品也必须进内容包：否则客户端只拿到 entity.item.xxx 原始 id，
     // 服务端 CookRuntime 也解析不到成品餐食（getItem 返回 null，烹制直接报错）。
     const recipeItemIds=(()=>{
@@ -191,7 +194,8 @@ function exportTask1Content({ databasePath = defaultDatabase,outputPath = defaul
     const requiredContentIds = unique(tasks.flatMap((task) => [...task.targets.map((target) => target.content_entity_canonical_id),
       ...task.rewards.map((reward) => reward.content_entity_canonical_id)].filter(Boolean)).concat(maritimeEntities.map((entry)=>entry.canonical_id))
       .concat(collectDropTargetContentIds(db))
-      .concat(recipeItemIds));
+      .concat(recipeItemIds)
+      .concat(cookingItemIds));
     const databaseContentEntities = selectIn(db,`
       SELECT canonical_id,source_canonical_id,entity_category,display_name,normalized_data_json
       FROM content_entities WHERE canonical_id IN (__IN__) ORDER BY canonical_id`,requiredContentIds)
@@ -215,7 +219,6 @@ function exportTask1Content({ databasePath = defaultDatabase,outputPath = defaul
 
     // 烹饪扩展层（data/cooking/cooking-recipes.json）：配方、成品餐食、食谱卷轴。
     // 走“导出时合并”，不改源库，保证 import 可重复。
-    const cooking = loadCookingContent();
     if (cooking) {
       gameplay.recipes = [...(gameplay.recipes ?? []), ...cooking.recipes];
       contentEntities.push(...cooking.entities);

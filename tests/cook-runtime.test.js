@@ -124,3 +124,17 @@ test('cook rejects recipes that are not learned or below the required cooking le
   st.cooking = { level: 1, exp: 0, learned: ['recipe.new'] };
   assert.throws(() => cook.cook('p1', 'recipe.new', 'ev-2'), /厨艺等级不足/);
 });
+
+test('learned recipes can be cooked in a different port than their origin', () => {
+  const recipe = { canonical_id: 'recipe.other', display_name: '异地菜', tier: 1, required_cooking_level: 1,
+    port_city_canonical_id: 'city.rome', cargo: { 'item.ing.bread': 1 }, silver_cost: 0, result_item_canonical_id: 'item.meal.other' };
+  const content = { locations: [{ canonical_id: 'loc.venice', city_canonical_id: 'city.venice' }], map_nodes: [{ map_node_canonical_id: 'node.venice', location_canonical_id: 'loc.venice' }] };
+  const st = baseState();
+  st.player.current_map_node_canonical_id = 'node.venice';
+  st.cooking = { level: 1, exp: 0, learned: ['recipe.other'] };
+  st.inventory = { 'item.ing.bread': 1 };
+  const cook = new CookRuntime({ storage: memStorage(st), catalog: catalogFor([recipe], [mealItem('other', {})], [], [], content) });
+  const res = cook.cook('p1', 'recipe.other', 'ev-other');
+  assert.equal(res.action, 'meal_cooked');
+  assert.equal(st.inventory['item.meal.other'], 1);
+});
